@@ -1,4 +1,4 @@
-if BOARD_SYSTEM76_ORYP6
+if BOARD_SYSTEM76_ORYP6 || BOARD_SYSTEM76_ORYP7
 
 config BOARD_SPECIFIC_OPTIONS
 	def_bool y
@@ -30,15 +30,18 @@ config MAINBOARD_DIR
 
 config VARIANT_DIR
 	default "oryp6" if BOARD_SYSTEM76_ORYP6
+	default "oryp7" if BOARD_SYSTEM76_ORYP7
 
 config MAINBOARD_PART_NUMBER
 	default "oryp6" if BOARD_SYSTEM76_ORYP6
+	default "oryp7" if BOARD_SYSTEM76_ORYP7
 
 config MAINBOARD_SMBIOS_PRODUCT_NAME
 	default "Oryx Pro"
 
 config MAINBOARD_VERSION
 	default "oryp6" if BOARD_SYSTEM76_ORYP6
+	default "oryp7" if BOARD_SYSTEM76_ORYP7
 
 config CBFS_SIZE
 	default 0xA00000
