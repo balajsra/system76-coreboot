@@ -8,6 +8,7 @@
 
 /* MKHI Command groups */
 #define MKHI_GROUP_ID_CBM	0x0
+#define MKHI_GROUP_ID_FWCAPS	0x3
 #define MKHI_GROUP_ID_HMRFPO	0x5
 #define MKHI_GROUP_ID_GEN	0xff
 #define MKHI_GROUP_ID_BUP_COMMON	0xf0
@@ -17,6 +18,13 @@
 
 /* Origin of Global Reset command */
 #define GR_ORIGIN_BIOS_POST	0x2
+
+/* Get/Set Firmware Capabilities Command IDs */
+#define MKHI_FWCAPS_GET_RULE	0x2
+#define MKHI_FWCAPS_SET_RULE	0x3
+
+/* Firmware Capabilities Rule IDs */
+#define MKHI_FWCAPS_RULE_SET_ME_DISABLE		0x6
 
 /* HMRFPO Command Ids */
 #define MKHI_HMRFPO_ENABLE	0x1
@@ -30,6 +38,9 @@
 
 /* Set End-of-POST in CSE */
 #define MKHI_END_OF_POST	0xc
+
+/* Enable IME command */
+#define MKHI_BUP_COMMON_SET_ME_ENABLE		0x03
 
 /* Boot partition info and set boot partition info command ids */
 #define MKHI_BUP_COMMON_GET_BOOT_PARTITION_INFO	0x1c
