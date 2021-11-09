@@ -20,6 +20,12 @@ static const struct soc_i2c_scl_pin i2c_scl_pins[] = {
 	I2C_RESET_SCL_PIN(I2C3_SCL_PIN, GPIO_I2C3_SCL),
 };
 
+static void lpc_configure_decodes(void)
+{
+	if (CONFIG(POST_IO) && (CONFIG_POST_IO_PORT == 0x80))
+		lpc_enable_port80();
+}
+
 static void reset_i2c_peripherals(void)
 {
 	const struct soc_amd_cezanne_config *cfg = config_of_soc();
@@ -39,6 +45,9 @@ void fch_pre_init(void)
 	enable_acpimmio_decode_pm04();
 	/* Setup SPI base by calling lpc_early_init before setting up eSPI. */
 	lpc_early_init();
+
+	if (!CONFIG(SOC_AMD_COMMON_BLOCK_USE_ESPI))
+		lpc_configure_decodes();
 
 	/* Setup eSPI to enable port80 routing if the board is using eSPI and the eSPI
 	   interface hasn't already been set up in verstage on PSP */
