@@ -22,7 +22,6 @@ chip soc/amd/cezanne
 
 	register "pspp_policy" = "DXIO_PSPP_BALANCED"
 
-	#TODO
 	register "gpp_clk_config[0]" = "GPP_CLK_OFF"
 	register "gpp_clk_config[1]" = "GPP_CLK_OFF"
 	register "gpp_clk_config[2]" = "GPP_CLK_REQ" # XHCI
@@ -34,25 +33,17 @@ chip soc/amd/cezanne
 	#TODO: USB?
 
 	device domain 0 on
-		#TODO
 		device ref iommu on end
-		device ref gpp_gfx_bridge_0 on end # DGPU
-		device ref gpp_bridge_0 on end # LAN
-		device ref gpp_bridge_1 on end # WLAN
-		device ref gpp_bridge_2 on end # SSD2
-		device ref gpp_bridge_3 on end # SSD1
-		device ref gpp_bridge_a on  # Internal GPP Bridge 0 to Bus A
+		device ref gpp_gfx_bridge_2 on end # WLAN
+		device ref gpp_bridge_3 on end # SSD
+		device ref gpp_bridge_a on # Internal GPP Bridge 0 to Bus A
 			device ref gfx on end # Internal GPU (GFX)
-			device ref gfx_hda on end # GFX HD Audio Controller
+			device ref gfx_hda on end # Display HD Audio Controller (GFXAZ)
 			device ref crypto on end # Crypto Coprocessor
-			device ref xhci_0 on end # USB 3.1 (USB0)
-			device ref xhci_1 on end # USB 3.1 (USB1)
-			device ref acp on end # Audio Processor
-			device ref hda on end # HD Audio Controller
-		end
-		device ref gpp_bridge_b on  # Internal GPP Bridge 1 to Bus B
-			device ref sata_0 on end # SATA
-			device ref sata_1 on end # SATA
+			device ref xhci_0 on end # XHCI0 TODO
+			device ref xhci_1 on end # XHCI1 TODO
+			device ref acp on end # Audio Processor (ACP)
+			device ref hda on end # Audio Processor HD Audio Controller (main AZ)
 		end
 	end
 

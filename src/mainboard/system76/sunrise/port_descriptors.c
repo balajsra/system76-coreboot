@@ -5,69 +5,28 @@
 #include <types.h>
 
 static const fsp_dxio_descriptor sunrise_dxio_descriptors[] = {
-	// TODO
-	// { /* DGPU */
-	// 	.engine_type = PCIE_ENGINE,
-	// 	.port_present = true,
-	// 	.start_logical_lane = 16,
-	// 	.end_logical_lane = 23,
-	// 	.device_number = 1,
-	// 	.function_number = 1,
-	// 	.turn_off_unused_lanes = true,
-	// 	.clk_req = CLK_REQ0,
-	// 	.port_params = {PP_PSPP_AC, 0x133, PP_PSPP_DC, 0x122}
-	// },
-	// { /* LAN */
-	// 	.engine_type = PCIE_ENGINE,
-	// 	.port_present = true,
-	// 	.start_logical_lane = 0,
-	// 	.end_logical_lane = 0,
-	// 	.device_number = 2,
-	// 	.function_number = 1,
-	// 	.turn_off_unused_lanes = true,
-	// 	.clk_req = CLK_REQ1,
-	// 	.port_params = {PP_PSPP_AC, 0x133, PP_PSPP_DC, 0x122}
-	// },
-	// { /* WLAN */
-	// 	.engine_type = PCIE_ENGINE,
-	// 	.port_present = true,
-	// 	.start_logical_lane = 1,
-	// 	.end_logical_lane = 1,
-	// 	.device_number = 2,
-	// 	.function_number = 2,
-	// 	.turn_off_unused_lanes = true,
-	// 	.clk_req = CLK_REQ6,
-	// 	.port_params = {PP_PSPP_AC, 0x133, PP_PSPP_DC, 0x122}
-	// },
-	// { /* SSD2 */
-	// 	.engine_type = PCIE_ENGINE,
-	// 	.port_present = true,
-	// 	.start_logical_lane = 4,
-	// 	.end_logical_lane = 7,
-	// 	.device_number = 2,
-	// 	.function_number = 3,
-	// 	.turn_off_unused_lanes = true,
-	// 	.clk_req = CLK_REQ4_GFX,
-	// 	.port_params = {PP_PSPP_AC, 0x133, PP_PSPP_DC, 0x122}
-	// },
-	// { /* SSD1 */
-	// 	.engine_type = PCIE_ENGINE,
-	// 	.port_present = true,
-	// 	.start_logical_lane = 8,
-	// 	.end_logical_lane = 11,
-	// 	.device_number = 2,
-	// 	.function_number = 4,
-	// 	.turn_off_unused_lanes = true,
-	// 	.clk_req = CLK_REQ5,
-	// 	.port_params = {PP_PSPP_AC, 0x133, PP_PSPP_DC, 0x122}
-	// },
-	// { /* HDD */
-	// 	.engine_type = SATA_ENGINE,
-	// 	.port_present = true,
-	// 	.start_logical_lane = 0,
-	// 	.end_logical_lane = 0,
-	// 	.channel_type = SATA_CHANNEL_LONG,
-	// }
+	{ /* SSD */
+		.engine_type = PCIE_ENGINE,
+		.port_present = true,
+		.start_logical_lane = 0,
+		.end_logical_lane = 3,
+		.device_number = 2,
+		.function_number = 4,
+		.turn_off_unused_lanes = true,
+		.clk_req = CLK_REQ3,
+		.port_params = {PP_PSPP_AC, 0x133, PP_PSPP_DC, 0x122}
+	},
+	{ /* WLAN */
+		.engine_type = PCIE_ENGINE,
+		.port_present = true,
+		.start_logical_lane = 5,
+		.end_logical_lane = 5,
+		.device_number = 1,
+		.function_number = 3,
+		.turn_off_unused_lanes = true,
+		.clk_req = CLK_REQ5,
+		.port_params = {PP_PSPP_AC, 0x133, PP_PSPP_DC, 0x122}
+	},
 };
 
 static const fsp_ddi_descriptor sunrise_ddi_descriptors[] = {
