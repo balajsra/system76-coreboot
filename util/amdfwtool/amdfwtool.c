@@ -346,7 +346,7 @@ typedef struct _context {
 	uint32_t current;	/* pointer within flash & proxy buffer */
 } context;
 
-#define RUN_BASE(ctx) (0xFFFFFFFF - (ctx).rom_size + 1)
+#define RUN_BASE(ctx) (0)
 #define RUN_OFFSET(ctx, offset) (RUN_BASE(ctx) + (offset))
 #define RUN_CURRENT(ctx) RUN_OFFSET((ctx), (ctx).current)
 #define BUFF_OFFSET(ctx, offset) ((void *)((ctx).rom + (offset)))
