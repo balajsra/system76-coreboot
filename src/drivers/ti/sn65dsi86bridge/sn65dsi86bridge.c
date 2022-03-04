@@ -1,9 +1,9 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 
 #include <console/console.h>
-#include <delay.h>
 #include <endian.h>
 #include <device/i2c_simple.h>
+#include <dp_aux.h>
 #include <edid.h>
 #include <timer.h>
 #include <types.h>
@@ -30,14 +30,6 @@
 #define DP_MAX_LINK_RATE		0x001
 #define DP_MAX_SUPPORTED_RATES		8 /* 16-bit little-endian */
 #define DP_LANE_COUNT_MASK		0xf
-
-/* Backlight configuration */
-#define DP_BACKLIGHT_MODE_SET			0x721
-#define DP_BACKLIGHT_CONTROL_MODE_MASK		0x3
-#define DP_BACKLIGHT_CONTROL_MODE_DPCD		0x2
-#define DP_DISPLAY_CONTROL_REGISTER		0x720
-#define DP_BACKLIGHT_ENABLE			0x1
-#define DP_BACKLIGHT_BRIGHTNESS_MSB		0x722
 
 /* link configuration */
 #define DP_LINK_BW_SET		0x100
@@ -132,17 +124,6 @@ enum vstream_config {
 	VSTREAM_ENABLE = 1,
 };
 
-enum i2c_over_aux {
-	I2C_OVER_AUX_WRITE_MOT_0 = 0x0,
-	I2C_OVER_AUX_READ_MOT_0 = 0x1,
-	I2C_OVER_AUX_WRITE_STATUS_UPDATE_0 = 0x2,
-	I2C_OVER_AUX_WRITE_MOT_1 = 0x4,
-	I2C_OVER_AUX_READ_MOT_1 = 0x5,
-	I2C_OVER_AUX_WRITE_STATUS_UPDATE_1 = 0x6,
-	NATIVE_AUX_WRITE = 0x8,
-	NATIVE_AUX_READ = 0x9,
-};
-
 enum aux_cmd_status {
 	NAT_I2C_FAIL = 1 << 6,
 	AUX_SHORT = 1 << 5,
@@ -166,21 +147,6 @@ enum ml_tx_mode {
 	REDRIVER_SEMI_AUTO_LINK_TRAINING = 0xb,
 };
 
-enum aux_request {
-	DPCD_READ,
-	DPCD_WRITE,
-	I2C_RAW_READ,
-	I2C_RAW_WRITE,
-	I2C_RAW_READ_AND_STOP,
-	I2C_RAW_WRITE_AND_STOP,
-};
-
-enum {
-	EDID_LENGTH = 128,
-	EDID_I2C_ADDR = 0x50,
-	EDID_EXTENSION_FLAG = 0x7e,
-};
-
 /*
  * LUT index corresponds to register value and LUT values corresponds
  * to dp data rate supported by the bridge in Mbps unit.
@@ -188,41 +154,6 @@ enum {
 static const unsigned int sn65dsi86_bridge_dp_rate_lut[] = {
 	0, 1620, 2160, 2430, 2700, 3240, 4320, 5400
 };
-
-static bool request_is_write(enum aux_request request)
-{
-	switch (request) {
-	case I2C_RAW_WRITE_AND_STOP:
-	case I2C_RAW_WRITE:
-	case DPCD_WRITE:
-		return true;
-	default:
-		return false;
-	}
-}
-
-static enum i2c_over_aux get_aux_cmd(enum aux_request request, uint32_t remaining_after_this)
-{
-	switch (request) {
-	case I2C_RAW_WRITE_AND_STOP:
-		if (!remaining_after_this)
-			return I2C_OVER_AUX_WRITE_MOT_0;
-		/* fallthrough */
-	case I2C_RAW_WRITE:
-		return I2C_OVER_AUX_WRITE_MOT_1;
-	case I2C_RAW_READ_AND_STOP:
-		if (!remaining_after_this)
-			return I2C_OVER_AUX_READ_MOT_0;
-		/* fallthrough */
-	case I2C_RAW_READ:
-		return I2C_OVER_AUX_READ_MOT_1;
-	case DPCD_WRITE:
-		return NATIVE_AUX_WRITE;
-	case DPCD_READ:
-	default:
-		return NATIVE_AUX_READ;
-	}
-}
 
 static cb_err_t sn65dsi86_bridge_aux_request(uint8_t bus,
 					     uint8_t chip,
@@ -241,10 +172,10 @@ static cb_err_t sn65dsi86_bridge_aux_request(uint8_t bus,
 		   NAT_I2C_FAIL | AUX_SHORT | AUX_DFER | AUX_RPLY_TOUT | SEND_INT);
 
 	while (total_size) {
-		length = MIN(total_size, 16);
+		length = MIN(total_size, DP_AUX_MAX_PAYLOAD_BYTES);
 		total_size -= length;
 
-		enum i2c_over_aux cmd = get_aux_cmd(request, total_size);
+		enum i2c_over_aux cmd = dp_get_aux_cmd(request, total_size);
 		if (i2c_writeb(bus, chip, SN_AUX_CMD_REG, (cmd << 4)) ||
 		    i2c_writeb(bus, chip, SN_AUX_ADDR_19_16_REG, (target_reg >> 16) & 0xF) ||
 		    i2c_writeb(bus, chip, SN_AUX_ADDR_15_8_REG, (target_reg >> 8) & 0xFF) ||
@@ -252,7 +183,7 @@ static cb_err_t sn65dsi86_bridge_aux_request(uint8_t bus,
 		    i2c_writeb(bus, chip, SN_AUX_LENGTH_REG, length))
 			return CB_ERR;
 
-		if (request_is_write(request)) {
+		if (dp_aux_request_is_write(request)) {
 			reg = SN_AUX_WDATA_REG_0;
 			for (i = 0; i < length; i++)
 				if (i2c_writeb(bus, chip, reg++, *data++))
@@ -263,17 +194,17 @@ static cb_err_t sn65dsi86_bridge_aux_request(uint8_t bus,
 			return CB_ERR;
 		if (!wait_ms(100, !i2c_readb(bus, chip, SN_AUX_CMD_REG, &buf) &&
 				  !(buf & AUX_CMD_SEND))) {
-			printk(BIOS_ERR, "ERROR: AUX_CMD_SEND not acknowledged\n");
+			printk(BIOS_ERR, "AUX_CMD_SEND not acknowledged\n");
 			return CB_ERR;
 		}
 		if (i2c_readb(bus, chip, SN_AUX_CMD_STATUS_REG, &buf))
 			return CB_ERR;
 		if (buf & (NAT_I2C_FAIL | AUX_SHORT | AUX_DFER | AUX_RPLY_TOUT)) {
-			printk(BIOS_ERR, "ERROR: AUX command failed, status = %#x\n", buf);
+			printk(BIOS_ERR, "AUX command failed, status = %#x\n", buf);
 			return CB_ERR;
 		}
 
-		if (!request_is_write(request)) {
+		if (!dp_aux_request_is_write(request)) {
 			reg = SN_AUX_RDATA_REG_0;
 			for (i = 0; i < length; i++) {
 				if (i2c_readb(bus, chip, reg++, &buf))
@@ -299,7 +230,7 @@ cb_err_t sn65dsi86_bridge_read_edid(uint8_t bus, uint8_t chip, struct edid *out)
 		err = sn65dsi86_bridge_aux_request(bus, chip, EDID_I2C_ADDR, EDID_LENGTH,
 						   I2C_RAW_READ_AND_STOP, edid);
 	if (err) {
-		printk(BIOS_ERR, "ERROR: Failed to read EDID.\n");
+		printk(BIOS_ERR, "Failed to read EDID.\n");
 		return err;
 	}
 
@@ -318,7 +249,7 @@ cb_err_t sn65dsi86_bridge_read_edid(uint8_t bus, uint8_t chip, struct edid *out)
 	}
 
 	if (decode_edid(edid, edid_size, out) != EDID_CONFORMANT) {
-		printk(BIOS_ERR, "ERROR: Failed to decode EDID.\n");
+		printk(BIOS_ERR, "Failed to decode EDID.\n");
 		return CB_ERR;
 	}
 
@@ -370,13 +301,13 @@ static void sn65dsi86_bridge_valid_dp_rates(uint8_t bus, uint8_t chip, bool rate
 	default:
 		printk(BIOS_ERR, "Unexpected max rate (%#x); assuming 5.4 GHz\n",
 		       (int)dpcd_val);
-		/* fall through */
+		__fallthrough;
 	case DP_LINK_BW_5_4:
 		rate_valid[7] = 1;
-		/* fall through */
+		__fallthrough;
 	case DP_LINK_BW_2_7:
 		rate_valid[4] = 1;
-		/* fall through */
+		__fallthrough;
 	case DP_LINK_BW_1_62:
 		rate_valid[1] = 1;
 		break;
@@ -433,7 +364,7 @@ static void sn65dsi86_bridge_set_dp_clock_range(uint8_t bus, uint8_t chip,
 	if (dp_rate_idx < ARRAY_SIZE(sn65dsi86_bridge_dp_rate_lut))
 		i2c_write_field(bus, chip, SN_DATARATE_CONFIG_REG, dp_rate_idx, 8, 5);
 	else
-		printk(BIOS_ERR, "ERROR: valid dp rate not found");
+		printk(BIOS_ERR, "valid dp rate not found");
 }
 
 static void sn65dsi86_bridge_set_bridge_active_timing(uint8_t bus,
@@ -476,7 +407,7 @@ static void sn65dsi86_bridge_link_training(uint8_t bus, uint8_t chip)
 	if (!wait_ms(500,
 	    !(i2c_readb(bus, chip, SN_DPPLL_SRC_REG, &buf)) &&
 	    (buf & BIT(7)))) {
-		printk(BIOS_ERR, "ERROR: PLL lock failure\n");
+		printk(BIOS_ERR, "PLL lock failure\n");
 	}
 
 	/*
@@ -495,14 +426,14 @@ static void sn65dsi86_bridge_link_training(uint8_t bus, uint8_t chip)
 
 		if (!wait_ms(500, !(i2c_readb(bus, chip, SN_ML_TX_MODE_REG, &buf)) &&
 				  (buf == NORMAL_MODE || buf == MAIN_LINK_OFF))) {
-			printk(BIOS_ERR, "ERROR: unexpected link training state: %#x\n", buf);
+			printk(BIOS_ERR, "unexpected link training state: %#x\n", buf);
 			return;
 		}
 		if (buf == NORMAL_MODE)
 			return;
 	}
 
-	printk(BIOS_ERR, "ERROR: Link training failed 10 times\n");
+	printk(BIOS_ERR, "Link training failed 10 times\n");
 }
 
 void sn65dsi86_backlight_enable(uint8_t bus, uint8_t chip)

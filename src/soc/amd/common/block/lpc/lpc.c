@@ -106,7 +106,7 @@ static void lpc_read_resources(struct device *dev)
 		     IORESOURCE_ASSIGNED | IORESOURCE_FIXED;
 
 	/* Add a memory resource for the SPI BAR. */
-	fixed_mem_resource(dev, 2, SPI_BASE_ADDRESS / 1024, 1,
+	fixed_mem_resource(dev, 2, SPI_BASE_ADDRESS / KiB, 1,
 			IORESOURCE_SUBTRACTIVE);
 
 	res = new_resource(dev, 3); /* IOAPIC */
@@ -322,9 +322,10 @@ static struct device_operations lpc_ops = {
 };
 
 static const unsigned short pci_device_ids[] = {
+	/* PCI device ID is used on all discrete FCHs and Family 16h Models 00h-3Fh */
 	PCI_DEVICE_ID_AMD_SB900_LPC,
+	/* PCI device ID is used on all integrated FCHs except Family 16h Models 00h-3Fh */
 	PCI_DEVICE_ID_AMD_CZ_LPC,
-	PCI_DEVICE_ID_AMD_FAM17H_LPC,
 	0
 };
 static const struct pci_driver lpc_driver __pci_driver = {

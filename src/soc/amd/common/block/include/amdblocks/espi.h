@@ -3,8 +3,7 @@
 #ifndef AMD_BLOCK_ESPI_H
 #define AMD_BLOCK_ESPI_H
 
-#include <stdint.h>
-#include <stddef.h>
+#include <types.h>
 
 /* eSPI MMIO base lives at an offset of 0x10000 from the address in SPI BAR. */
 #define ESPI_OFFSET_FROM_BAR			0x10000
@@ -16,20 +15,20 @@
 #define  ESPI_DECODE_IO_0X60_0X64_EN		(1 << 1)
 #define  ESPI_DECODE_IO_0X2E_0X2F_EN		(1 << 0)
 
-#define ESPI_IO_BASE_OFFSET_REG0		0x44
-#define ESPI_IO_BASE_OFFSET_REG1		0x48
-#define ESPI_IO_RANGE_SIZE_OFFSET		0x4c
-#define ESPI_MMIO_BASE_OFFSET_REG0		0x50
-#define ESPI_MMIO_BASE_OFFSET_REG1		0x54
-#define ESPI_MMIO_BASE_OFFSET_REG2		0x58
-#define ESPI_MMIO_BASE_OFFSET_REG3		0x5C
-#define ESPI_MMIO_OFFSET_SIZE_REG0		0x60
-#define ESPI_MMIO_OFFSET_SIZE_REG1		0x64
+#define ESPI_IO_BASE_REG0			0x44
+#define ESPI_IO_BASE_REG1			0x48
+#define ESPI_IO_SIZE0				0x4c
+#define ESPI_MMIO_BASE_REG0			0x50
+#define ESPI_MMIO_BASE_REG1			0x54
+#define ESPI_MMIO_BASE_REG2			0x58
+#define ESPI_MMIO_BASE_REG3			0x5c
+#define ESPI_MMIO_SIZE_REG0			0x60
+#define ESPI_MMIO_SIZE_REG1			0x64
 
-#define ESPI_IO_RANGE_BASE(range)	(ESPI_IO_BASE_OFFSET_REG0 + ((range) & 3) * 2)
-#define ESPI_IO_RANGE_SIZE(range)	(ESPI_IO_RANGE_SIZE_OFFSET + ((range) & 3))
-#define ESPI_MMIO_RANGE_BASE(range)	(ESPI_MMIO_BASE_OFFSET_REG0 + ((range) & 3) * 4)
-#define ESPI_MMIO_RANGE_SIZE(range)	(ESPI_MMIO_OFFSET_SIZE_REG0 + ((range) & 3) * 2)
+#define ESPI_IO_RANGE_BASE(range)		(ESPI_IO_BASE_REG0 + ((range) & 3) * 2)
+#define ESPI_IO_RANGE_SIZE(range)		(ESPI_IO_SIZE0 + ((range) & 3))
+#define ESPI_MMIO_RANGE_BASE(range)		(ESPI_MMIO_BASE_REG0 + ((range) & 3) * 4)
+#define ESPI_MMIO_RANGE_SIZE(range)		(ESPI_MMIO_SIZE_REG0 + ((range) & 3) * 2)
 
 #define ESPI_GENERIC_IO_WIN_COUNT		4
 #define ESPI_GENERIC_IO_MAX_WIN_SIZE		0x100
@@ -106,15 +105,13 @@ struct espi_config {
 
 /*
  * Open I/O window using the provided base and size.
- * Return value: 0 = success, -1 = error.
  */
-int espi_open_io_window(uint16_t base, size_t size);
+enum cb_err espi_open_io_window(uint16_t base, size_t size);
 
 /*
  * Open MMIO window using the provided base and size.
- * Return value: 0 = success, -1 = error.
  */
-int espi_open_mmio_window(uint32_t base, size_t size);
+enum cb_err  espi_open_mmio_window(uint32_t base, size_t size);
 
 /*
  * In cases where eSPI BAR is statically provided by SoC, use that BAR instead of reading
@@ -124,9 +121,8 @@ void espi_update_static_bar(uintptr_t bar);
 
 /*
  * Perform eSPI connection setup to the slave. Currently, this supports slave0 only.
- * Returns 0 on success and -1 on error.
  */
-int espi_setup(void);
+enum cb_err  espi_setup(void);
 
 /* Run mainboard configuration needed to set up eSPI */
 void mb_set_up_early_espi(void);

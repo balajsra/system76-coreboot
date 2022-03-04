@@ -8,7 +8,6 @@
 #include <console/console.h>
 #include <cpu/amd/microcode.h>
 #include <cpu/cpu.h>
-#include <cpu/x86/lapic.h>
 #include <cpu/x86/mp.h>
 #include <cpu/x86/mtrr.h>
 #include <cpu/x86/smm.h>
@@ -51,9 +50,9 @@ static const struct mp_ops mp_ops = {
 
 void mp_init_cpus(struct bus *cpu_bus)
 {
-	/* Clear for take-off */
-	/* TODO: Handle mp_init_with_smm failure? */
-	mp_init_with_smm(cpu_bus, &mp_ops);
+	if (mp_init_with_smm(cpu_bus, &mp_ops) != CB_SUCCESS)
+		die_with_post_code(POST_HW_INIT_FAILURE,
+				"mp_init_with_smm failed. Halting.\n");
 
 	/* pre_mp_init made the flash not cacheable. Reset to WP for performance. */
 	mtrr_use_temp_range(FLASH_BASE_ADDR, CONFIG_ROM_SIZE, MTRR_TYPE_WRPROT);
@@ -62,7 +61,6 @@ void mp_init_cpus(struct bus *cpu_bus)
 static void zen_2_3_init(struct device *dev)
 {
 	check_mca();
-	setup_lapic();
 	set_cstate_io_addr();
 
 	amd_update_microcode_from_cbfs();

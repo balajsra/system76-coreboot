@@ -4,6 +4,7 @@
 #define _AMD_FW_TOOL_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef enum _amd_fw_type {
 	AMD_FW_PSP_PUBKEY = 0,
@@ -42,11 +43,15 @@ typedef enum _amd_fw_type {
 	AMD_FW_USB_PHY = 0x44,
 	AMD_FW_TOS_SEC_POLICY = 0x45,
 	AMD_FW_DRTM_TA = 0x47,
+	AMD_FW_RECOVERYAB_A = 0x48,
+	AMD_FW_RECOVERYAB_B = 0x4A,
+	AMD_FW_BIOS_TABLE = 0x49,
 	AMD_FW_KEYDB_BL = 0x50,
 	AMD_FW_KEYDB_TOS = 0x51,
 	AMD_FW_PSP_VERSTAGE = 0x52,
 	AMD_FW_VERSTAGE_SIG = 0x53,
 	AMD_RPMC_NVRAM = 0x54,
+	AMD_FW_SPL = 0x55,
 	AMD_FW_DMCU_ERAM = 0x58,
 	AMD_FW_DMCU_ISR = 0x59,
 	AMD_FW_PSP_BOOTLOADER_AB = 0x73,
@@ -87,7 +92,10 @@ typedef struct _embedded_firmware {
 	uint32_t gec_entry;
 	uint32_t xhci_entry;
 	uint32_t psp_directory;
-	uint32_t combo_psp_directory;
+	union {
+		uint32_t new_psp_directory;
+		uint32_t combo_psp_directory;
+	};
 	uint32_t bios0_entry; /* todo: add way to select correct entry */
 	uint32_t bios1_entry;
 	uint32_t bios2_entry;
@@ -117,7 +125,16 @@ typedef struct _psp_directory_header {
 	uint32_t cookie;
 	uint32_t checksum;
 	uint32_t num_entries;
-	uint32_t additional_info;
+	union {
+		uint32_t additional_info;
+		struct {
+			uint32_t dir_size:10;
+			uint32_t spi_block_size:4;
+			uint32_t base_addr:15;
+			uint32_t address_mode:2;
+			uint32_t not_used:1;
+		} __attribute__((packed)) additional_info_fields;
+	};
 } __attribute__((packed, aligned(16))) psp_directory_header;
 
 typedef struct _psp_directory_entry {
@@ -125,7 +142,8 @@ typedef struct _psp_directory_entry {
 	uint8_t subprog;
 	uint16_t rsvd;
 	uint32_t size;
-	uint64_t addr; /* or a value in some cases */
+	uint64_t addr:62; /* or a value in some cases */
+	uint64_t address_mode:2;
 } __attribute__((packed)) psp_directory_entry;
 
 typedef struct _psp_directory_table {
@@ -160,7 +178,16 @@ typedef struct _bios_directory_hdr {
 	uint32_t cookie;
 	uint32_t checksum;
 	uint32_t num_entries;
-	uint32_t additional_info;
+	union {
+		uint32_t additional_info;
+		struct {
+			uint32_t dir_size:10;
+			uint32_t spi_block_size:4;
+			uint32_t base_addr:15;
+			uint32_t address_mode:2;
+			uint32_t not_used:1;
+		} __attribute__((packed)) additional_info_fields;
+	};
 } __attribute__((packed, aligned(16))) bios_directory_hdr;
 
 typedef struct _bios_directory_entry {
@@ -173,7 +200,8 @@ typedef struct _bios_directory_entry {
 	int inst:4;
 	uint8_t subprog; /* b[7:3] reserved */
 	uint32_t size;
-	uint64_t source;
+	uint64_t source:62;
+	uint64_t address_mode:2;
 	uint64_t dest;
 } __attribute__((packed)) bios_directory_entry;
 
@@ -182,9 +210,12 @@ typedef struct _bios_directory_table {
 	bios_directory_entry entries[];
 } bios_directory_table;
 
-#define BDT_LVL1 0x1
-#define BDT_LVL2 0x2
+#define BDT_LVL1 (1 << 0)
+#define BDT_LVL2 (1 << 1)
+#define BDT_LVL1_AB (1 << 2)
+#define BDT_LVL2_AB (1 << 3)
 #define BDT_BOTH (BDT_LVL1 | BDT_LVL2)
+#define BDT_BOTH_AB (BDT_LVL1_AB | BDT_LVL2_AB)
 typedef struct _amd_bios_entry {
 	amd_bios_type type;
 	char *filename;
@@ -208,9 +239,12 @@ typedef struct _amd_bios_entry {
 #define BDT1_COOKIE 0x44484224		/* 'DHB$ */
 #define BDT2_COOKIE 0x324c4224		/* '2LB$ */
 
-#define PSP_LVL1 0x1
-#define PSP_LVL2 0x2
+#define PSP_LVL1 (1 << 0)
+#define PSP_LVL2 (1 << 1)
+#define PSP_LVL1_AB (1 << 2)
+#define PSP_LVL2_AB (1 << 3)
 #define PSP_BOTH (PSP_LVL1 | PSP_LVL2)
+#define PSP_BOTH_AB (PSP_LVL1_AB | PSP_LVL2_AB)
 typedef struct _amd_fw_entry {
 	amd_fw_type type;
 	char *filename;
@@ -220,12 +254,14 @@ typedef struct _amd_fw_entry {
 } amd_fw_entry;
 
 typedef struct _amd_cb_config {
-	uint8_t have_whitelist;
-	uint8_t unlock_secure;
-	uint8_t use_secureos;
-	uint8_t load_mp2_fw;
-	uint8_t multi_level;
-	uint8_t s0i3;
+	bool have_whitelist;
+	bool unlock_secure;
+	bool use_secureos;
+	bool load_mp2_fw;
+	bool multi_level;
+	bool s0i3;
+	bool have_mb_spl;
+	bool recovery_ab;
 } amd_cb_config;
 
 void register_fw_fuse(char *str);

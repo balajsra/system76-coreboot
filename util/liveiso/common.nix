@@ -8,7 +8,7 @@
 		<nixpkgs/nixos/modules/installer/cd-dvd/iso-image.nix>
 	];
 
-	system.stateVersion = "21.05";
+	system.stateVersion = "21.11";
 
 	isoImage = {
 		makeEfiBootable = true;
@@ -33,6 +33,7 @@
 			"console=ttyS0,115200"
 			"console=tty0"
 			"iomem=relaxed"
+			"intel-spi.writeable=1"
 		];
 		# pkgs.linuxPackages == lts
 		# pkgs.linuxPackages_latest == stable
@@ -92,11 +93,13 @@
 			user = {
 				isNormalUser = true;
 				group = "user";
-				extraGroups = [ "users" "wheel" "networkmanager" "uucp" ];
+				extraGroups = [ "users" "wheel" "networkmanager" "uucp" "flashrom" ];
 				initialHashedPassword = "";
 			};
 		};
 	};
+
+	programs.flashrom.enable = true;
 
 	environment.systemPackages = with pkgs; [
 		acpica-tools
@@ -115,7 +118,6 @@
 		efivar
 		exfat
 		f2fs-tools
-		flashrom
 		fuse
 		fuse3
 		fwts
@@ -127,7 +129,6 @@
 		hexdump
 		htop
 		i2c-tools
-		iasl
 		intel-gpu-tools
 		inxi
 		iotools
@@ -138,6 +139,7 @@
 		mkpasswd
 		ms-sys
 		msr-tools
+		mtdutils
 		neovim
 		nixos-install-tools
 		ntfsprogs

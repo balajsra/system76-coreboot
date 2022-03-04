@@ -16,7 +16,7 @@
 #elif CONFIG(SOC_AMD_PICASSO)
   #define SPI_MODE_FIELD spi_readmode_f17_mod_00_2f
   #define SPI_SPEED_FIELD  spi_fastspeed_f17_mod_00_2f
-#elif CONFIG(SOC_AMD_CEZANNE)
+#elif CONFIG(SOC_AMD_CEZANNE) | CONFIG(SOC_AMD_SABRINA)
   #define SPI_MODE_FIELD spi_readmode_f17_mod_30_3f
   #define SPI_SPEED_FIELD spi_fastspeed_f17_mod_30_3f
 #else
@@ -28,6 +28,8 @@ struct second_gen_efs { /* todo: expand for Server products */
 	uint32_t gen:1; /* Client products only use bit 0 */
 	uint32_t reserved:31;
 } __attribute__((packed));
+
+#define EFS_SECOND_GEN 0
 
 /* Copied from coreboot/util/amdfwtool.h */
 struct embedded_firmware {

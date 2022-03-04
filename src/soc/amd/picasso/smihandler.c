@@ -23,6 +23,7 @@ static void fch_apmc_smi_handler(void)
 
 	switch (cmd) {
 	case APM_CNT_ACPI_ENABLE:
+		acpi_clear_pm_gpe_status();
 		acpi_enable_sci();
 		break;
 	case APM_CNT_ACPI_DISABLE:
@@ -123,7 +124,7 @@ static void fch_slp_typ_handler(void)
 			psp_notify_sx_info(ACPI_S3);
 
 		smu_sx_entry(); /* Leave SlpTypeEn clear, SMU will set */
-		printk(BIOS_ERR, "Error: System did not go to sleep\n");
+		printk(BIOS_ERR, "System did not go to sleep\n");
 
 		hlt();
 	}

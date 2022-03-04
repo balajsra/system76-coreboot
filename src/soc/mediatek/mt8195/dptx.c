@@ -11,7 +11,6 @@
 #include <soc/dptx_reg.h>
 #include <soc/dp_intf.h>
 #include <string.h>
-#include <timer.h>
 
 #define ONE_BLOCK_SIZE			128
 
@@ -432,7 +431,7 @@ static void dptx_setsdp_downcnt_init_inhblanking(struct mtk_dp *mtk_dp)
 			 0x08 : 0x00;
 		if (pixclk_mhz > mtk_dp->train_info.linkrate * 27) {
 			count = 0x8;
-			printk(BIOS_ERR, "ERROR: Pixclk > LinkRateChange\n");
+			printk(BIOS_ERR, "Pixclk > LinkRateChange\n");
 		} else {
 			count = 0x10 + offset;
 		}

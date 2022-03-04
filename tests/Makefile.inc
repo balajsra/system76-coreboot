@@ -45,6 +45,7 @@ TEST_CFLAGS += -I$(src) -I$(src)/include -I$(src)/commonlib/include \
 # Only put conservative warnings here that really detect code that's obviously
 # unintentional.
 TEST_CFLAGS += -Wall -Werror -Wundef -Wstrict-prototypes -Wno-inline-asm
+TEST_CFLAGS += -Wno-unknown-warning-option -Wno-source-mgr -Wno-main-return-type
 
 # Path for Kconfig autoheader
 TEST_CFLAGS += -I$(dir $(TEST_KCONFIG_AUTOHEADER))
@@ -156,10 +157,11 @@ $($(1)-objs): $(testobj)/$(1)/%.o: $$$$*.c $$($(1)-config-file)
 		-MF $$(basename $$@).d -MT $$@ -c $$< -o $$@.orig
 	objcopy_wrap_flags=''; \
 	for sym in $$($(1)-mocks); do \
-		sym_line="$$$$($(OBJDUMP) -t $$@.orig | grep -E "[0-9a-fA-F]+\\s+w\\s+F\\s+.*\\s$$$$sym$$$$")"; \
+		sym_line="$$$$($(OBJDUMP) -t $$@.orig \
+			| grep -E "[0-9a-fA-F]+\\s+w\\s+F\\s+.*\\s$$$$sym$$$$")"; \
 		if [ ! -z "$$$$sym_line" ] ; then \
-			addr="$$$$(echo \"$$$$sym_line\" | awk '{ print $$$$1 }')"; \
-			section="$$$$(echo \"$$$$sym_line\" | awk '{ print $$$$(NF - 2) }')"; \
+			addr="$$$$(echo "$$$$sym_line" | awk '{ print $$$$1 }')"; \
+			section="$$$$(echo "$$$$sym_line" | awk '{ print $$$$(NF - 2) }')"; \
 			objcopy_wrap_flags="$$$$objcopy_wrap_flags --add-symbol __real_$$$${sym}=$$$${section}:0x$$$${addr},function,global"; \
 		fi \
 	done ; \
@@ -232,7 +234,7 @@ endif
 $(alltests): $$($$(@)-bin)
 	rm -f $(testobj)/junit-$(subst /,_,$(patsubst $(testobj)/%/,%,$(dir $^)))\(*\).xml
 	rm -f $(testobj)/$(subst /,_,$^).failed
-	-./$^ || echo failed > $(testobj)/$(subst /,_,$^).failed
+	-$^ || echo failed > $(testobj)/$(subst /,_,$^).failed
 
 # Build a code coverage report by collecting all the gcov files into a single
 # report. If COV is not set, this might be a user error, and they're trying

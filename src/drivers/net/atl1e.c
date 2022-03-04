@@ -30,7 +30,7 @@ static u8 get_hex_digit(const u8 c)
 			ret = c - 'a' + 0x0a;
 	}
 	if (ret > 0x0f) {
-		printk(BIOS_ERR, "Error: Invalid hex digit found: "
+		printk(BIOS_ERR, "Invalid hex digit found: "
 				 "%c - 0x%02x\n", (char)c, c);
 		ret = 0;
 	}
@@ -106,7 +106,7 @@ static int atl1e_eeprom_exist(u32 mem_base)
 static void atl1e_init(struct device *dev)
 {
 	/* Get the resource of the NIC mmio */
-	struct resource *nic_res = find_resource(dev, PCI_BASE_ADDRESS_0);
+	struct resource *nic_res = probe_resource(dev, PCI_BASE_ADDRESS_0);
 
 	if (nic_res == NULL) {
 		printk(BIOS_ERR, "atl1e: resource not found\n");

@@ -34,10 +34,6 @@ static const char *northbridge_acpi_name(const struct device *dev)
 	return NULL;
 }
 
-/*
- * TODO: We could determine how many PCIe buses we need in the bar.
- *       For now, that number is hardcoded to a max of 64.
- */
 static struct device_operations pci_domain_ops = {
 	.read_resources    = pci_domain_read_resources,
 	.set_resources     = pci_domain_set_resources,
@@ -251,7 +247,7 @@ static void mc_add_dram_resources(struct device *dev, int *resource_cnt)
 
 	/*
 	 * DMA Protected Range can be reserved below TSEG for PCODE patch
-	 * or TXT/BootGuard related data.  Rather than report a base address,
+	 * or TXT/Boot Guard related data.  Rather than report a base address,
 	 * the DPR register reports the TOP of the region, which is the same
 	 * as TSEG base. The region size is reported in MiB in bits 11:4.
 	 */

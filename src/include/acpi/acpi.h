@@ -31,14 +31,6 @@
  #define  SLP_TYP_S5	5
 #endif
 
-/* ACPI Device Sleep States */
-#define ACPI_DEVICE_SLEEP_D0		0
-#define ACPI_DEVICE_SLEEP_D1		1
-#define ACPI_DEVICE_SLEEP_D2		2
-#define ACPI_DEVICE_SLEEP_D3		3
-#define ACPI_DEVICE_SLEEP_D3_HOT	ACPI_DEVICE_SLEEP_D3
-#define ACPI_DEVICE_SLEEP_D3_COLD	4
-
 #define ACPI_TABLE_CREATOR	"COREBOOT"  /* Must be exactly 8 bytes long! */
 #define OEM_ID			"COREv4"    /* Must be exactly 6 bytes long! */
 #define ACPI_DSDT_REV_1		0x01        /* DSDT revision: ACPI v1 */
@@ -51,6 +43,15 @@
 #include <cper.h>
 #include <romstage_handoff.h>
 #include <types.h>
+
+enum acpi_device_sleep_states {
+	ACPI_DEVICE_SLEEP_D0		= 0,
+	ACPI_DEVICE_SLEEP_D1		= 1,
+	ACPI_DEVICE_SLEEP_D2		= 2,
+	ACPI_DEVICE_SLEEP_D3		= 3,
+	ACPI_DEVICE_SLEEP_D3_HOT	= ACPI_DEVICE_SLEEP_D3,
+	ACPI_DEVICE_SLEEP_D3_COLD	= 4,
+};
 
 #define RSDP_SIG		"RSD PTR "  /* RSDT pointer signature */
 #define ASLC			"CORE"      /* Must be exactly 4 bytes long! */
@@ -745,8 +746,8 @@ typedef struct acpi_fadt {
 	u32 flags;
 	acpi_addr_t reset_reg;
 	u8 reset_value;
-	u16 ARM_boot_arch;	/* Revision 6 only, Revision 5: Must be zero */
-	u8 FADT_MinorVersion;	/* Revision 6 only, Revision 5: Must be zero */
+	u16 ARM_boot_arch;	/* Must be zero if ACPI Revision <= 5.0 */
+	u8 FADT_MinorVersion;	/* Must be zero if ACPI Revision <= 5.0 */
 	u32 x_firmware_ctl_l;
 	u32 x_firmware_ctl_h;
 	u32 x_dsdt_l;
@@ -767,12 +768,21 @@ typedef struct acpi_fadt {
 } __packed acpi_fadt_t;
 
 /* FADT TABLE Revision values */
-#define ACPI_FADT_REV_ACPI_1_0		1
-#define ACPI_FADT_REV_ACPI_2_0		3
-#define ACPI_FADT_REV_ACPI_3_0		4
-#define ACPI_FADT_REV_ACPI_4_0		4
-#define ACPI_FADT_REV_ACPI_5_0		5
-#define ACPI_FADT_REV_ACPI_6_0		6
+#define ACPI_FADT_REV_ACPI_1	1
+#define ACPI_FADT_REV_ACPI_2	3
+#define ACPI_FADT_REV_ACPI_3	4
+#define ACPI_FADT_REV_ACPI_4	4
+#define ACPI_FADT_REV_ACPI_5	5
+#define ACPI_FADT_REV_ACPI_6	6
+
+/* FADT Minor Version value:
+ *  Bits 0-3: minor version
+ *  Bits 4-7: Errata
+ *   value of 1 means this is compatible with Errata A,
+ *   value of 2 would be compatible with Errata B, and so on
+ * Version 6.3 Errata A would be: (1 << 4) | 3
+ */
+#define ACPI_FADT_MINOR_VERSION_0	0 /* coreboot currently use this version */
 
 /* Flags for p_lvl2_lat and p_lvl3_lat */
 #define ACPI_FADT_C2_NOT_SUPPORTED	101
@@ -1215,6 +1225,7 @@ void acpi_create_einj(acpi_einj_t *einj, uintptr_t addr, u8 actions);
 unsigned long fw_cfg_acpi_tables(unsigned long start);
 
 /* These are implemented by the target port or north/southbridge. */
+void preload_acpi_dsdt(void);
 unsigned long write_acpi_tables(unsigned long addr);
 unsigned long acpi_fill_madt(unsigned long current);
 unsigned long acpi_fill_ivrs_ioapic(acpi_ivrs_t *ivrs, unsigned long current);
@@ -1229,9 +1240,6 @@ void mainboard_fill_fadt(acpi_fadt_t *fadt);
 
 void acpi_fill_gnvs(void);
 void acpi_fill_cnvs(void);
-
-void update_ssdt(void *ssdt);
-void update_ssdtx(void *ssdtx, int i);
 
 unsigned long acpi_fill_lpit(unsigned long current);
 
@@ -1249,8 +1257,6 @@ int acpi_create_madt_lapic_nmi(acpi_madt_lapic_nmi_t *lapic_nmi, u8 cpu,
 			       u16 flags, u8 lint);
 void acpi_create_madt(acpi_madt_t *madt);
 unsigned long acpi_create_madt_lapics(unsigned long current);
-unsigned long acpi_create_madt_lapic_nmis(unsigned long current, u16 flags,
-					  u8 lint);
 int acpi_create_madt_lx2apic(acpi_madt_lx2apic_t *lapic, u32 cpu, u32 apic);
 int acpi_create_madt_lx2apic_nmi(acpi_madt_lx2apic_nmi_t *lapic_nmi, u32 cpu,
 				 u16 flags, u8 lint);
@@ -1435,6 +1441,7 @@ static inline uintptr_t acpi_align_current(uintptr_t current)
  * be made into a weak function if there is ever a need to override the
  * coreboot default ACPI spec version supported. */
 int get_acpi_table_revision(enum acpi_tables table);
+u8 get_acpi_fadt_minor_version(void);
 
 #endif  // !defined(__ASSEMBLER__) && !defined(__ACPI__)
 

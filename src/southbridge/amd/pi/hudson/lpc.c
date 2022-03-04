@@ -301,10 +301,10 @@ static void hudson_lpc_enable_childrens_resources(struct device *dev)
 	switch (var_num) {
 	case 3:
 		pci_write_config16(dev, 0x90, reg_var[2]);
-		/* fall through */
+		__fallthrough;
 	case 2:
 		pci_write_config16(dev, 0x66, reg_var[1]);
-		/* fall through */
+		__fallthrough;
 	case 1:
 		pci_write_config16(dev, 0x64, reg_var[0]);
 		break;
@@ -354,7 +354,9 @@ static struct device_operations lpc_ops = {
 };
 
 static const unsigned short pci_device_ids[] = {
+	/* PCI device ID is used on all discrete FCHs and Family 16h Models 00h-3Fh */
 	PCI_DEVICE_ID_AMD_SB900_LPC,
+	/* PCI device ID is used on all integrated FCHs except Family 16h Models 00h-3Fh */
 	PCI_DEVICE_ID_AMD_CZ_LPC,
 	0
 };

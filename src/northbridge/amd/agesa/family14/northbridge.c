@@ -625,7 +625,7 @@ static void cpu_bus_scan(struct device *dev)
 	/* There is only one node for fam14, but there may be multiple cores. */
 	cpu = pcidev_on_root(0x18, 0);
 	if (!cpu)
-		printk(BIOS_ERR, "ERROR: %02x:%02x.0 not found", 0, 0x18);
+		printk(BIOS_ERR, "%02x:%02x.0 not found", 0, 0x18);
 
 	cores_found = (pci_read_config32(pcidev_on_root(0x18, 0x3),
 					0xe8) >> 12) & 3;
@@ -818,13 +818,6 @@ static struct device_operations cpu_bus_ops = {
 
 static void root_complex_enable_dev(struct device *dev)
 {
-	static int done = 0;
-
-	if (!done) {
-		setup_bsp_ramtop();
-		done = 1;
-	}
-
 	/* Set the operations if it is a special bus type */
 	if (dev->path.type == DEVICE_PATH_DOMAIN) {
 		dev->ops = &pci_domain_ops;

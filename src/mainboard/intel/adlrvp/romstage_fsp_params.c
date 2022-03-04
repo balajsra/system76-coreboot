@@ -24,8 +24,27 @@ static size_t get_spd_index(void)
 	return spd_index;
 }
 
-void mainboard_memory_init_params(FSP_M_CONFIG *m_cfg)
+/*
+ * ADL-P silicon can support 7 SRC CLK's and 10 CLKREQ signals. Out of 7 SRCCLK's
+ * 3 will be used for CPU, the rest are for PCH. If more than 4 PCH devices are
+ * connected on the platform, an external differential buffer chip needs to be placed at
+ * the platform level.
+ *
+ * GEN3_EXTERNAL_CLOCK_BUFFER Kconfig is selected for ADL-P RVP (not applicable for
+ * ADL-M/N RVP)
+ *
+ * CONFIG_CLKSRC_FOR_EXTERNAL_BUFFER provides the CLKSRC that feed clock to discrete
+ * buffer for further distribution to platform.
+ */
+static void configure_external_clksrc(FSP_M_CONFIG *m_cfg)
 {
+	for (unsigned int i = CONFIG_MAX_PCIE_CLOCK_SRC; i < CONFIG_MAX_PCIE_CLOCK_REQ; i++)
+		m_cfg->PcieClkSrcUsage[i] = CONFIG_CLKSRC_FOR_EXTERNAL_BUFFER;
+}
+
+void mainboard_memory_init_params(FSPM_UPD *memupd)
+{
+	FSP_M_CONFIG *m_cfg = &memupd->FspmConfig;
 	const struct mb_cfg *mem_config = variant_memory_params();
 	int board_id = get_board_id();
 	const bool half_populated = false;
@@ -62,10 +81,14 @@ void mainboard_memory_init_params(FSP_M_CONFIG *m_cfg)
 	case ADL_P_LP5_2:
 	case ADL_M_LP4:
 	case ADL_M_LP5:
+	case ADL_N_LP5:
 		memcfg_init(m_cfg, mem_config, &memory_down_spd_info, half_populated);
 		break;
 	default:
 		die("Unknown board id = 0x%x\n", board_id);
 		break;
 	}
+
+	if (CONFIG(GEN3_EXTERNAL_CLOCK_BUFFER))
+		configure_external_clksrc(m_cfg);
 }

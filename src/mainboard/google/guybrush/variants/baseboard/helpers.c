@@ -4,13 +4,6 @@
 #include <device/device.h>
 #include <soc/gpio.h>
 
-WEAK_DEV_PTR(fpmcu);
-
-bool variant_has_fpmcu(void)
-{
-	return is_dev_enabled(DEV_PTR(fpmcu));
-}
-
 bool __weak variant_has_pcie_wwan(void)
 {
 	return false;
@@ -18,5 +11,5 @@ bool __weak variant_has_pcie_wwan(void)
 
 uint8_t __weak variant_sd_aux_reset_gpio(void)
 {
-	return GPIO_5;
+	return GPIO_69;
 }

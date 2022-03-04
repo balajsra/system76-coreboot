@@ -7,7 +7,6 @@
 #include <cpu/cpu.h>
 #include <cpu/x86/mtrr.h>
 #include <cpu/x86/msr.h>
-#include <cpu/x86/lapic.h>
 #include <cpu/x86/mp.h>
 #include <cpu/intel/microcode.h>
 #include <cpu/intel/speedstep.h>
@@ -338,9 +337,7 @@ static void model_206ax_init(struct device *cpu)
 	/* Setup Page Attribute Tables (PAT) */
 	// TODO set up PAT
 
-	/* Enable the local CPU APICs */
 	enable_lapic_tpr();
-	setup_lapic();
 
 	/* Set virtualization based on Kconfig option */
 	set_vmx_and_lock();
@@ -380,8 +377,8 @@ static void pre_mp_init(void)
 static int get_cpu_count(void)
 {
 	msr_t msr;
-	int num_threads;
-	int num_cores;
+	unsigned int num_threads;
+	unsigned int num_cores;
 
 	msr = rdmsr(MSR_CORE_THREAD_COUNT);
 	num_threads = (msr.lo >> 0) & 0xffff;

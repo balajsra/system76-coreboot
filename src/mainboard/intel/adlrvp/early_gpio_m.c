@@ -2,7 +2,6 @@
 
 #include <baseboard/gpio.h>
 #include <baseboard/variants.h>
-#include <commonlib/helpers.h>
 #include <soc/gpio.h>
 
 /* Early pad configuration in bootblock */
@@ -16,6 +15,9 @@ static const struct pad_config early_gpio_table[] = {
 	PAD_CFG_GPO(GPP_H0, 0, PLTRST),
 	/* H13 : CPU_SSD_RST# */
 	PAD_CFG_GPO(GPP_H13, 0, PLTRST),
+
+	/* EC_IN_RW */
+	PAD_CFG_GPI(GPP_E7, NONE, DEEP),
 
 	/* CPU PCIe VGPIO for RP0 */
 	PAD_CFG_NF_VWEN(GPP_vGPIO_PCIE_0, NONE, DEEP, NF1),

@@ -2,6 +2,7 @@
 
 #include <bootmem.h>
 #include <device/device.h>
+#include <soc/apusys.h>
 #include <soc/devapc.h>
 #include <soc/dfd.h>
 #include <soc/emi.h>
@@ -9,7 +10,6 @@
 #include <soc/mcupm.h>
 #include <soc/mmu_operations.h>
 #include <soc/sspm.h>
-#include <soc/tracker_common.h>
 #include <soc/ufs.h>
 #include <symbols.h>
 
@@ -28,6 +28,7 @@ static void soc_init(struct device *dev)
 {
 	mtk_mmu_disable_l2c_sram();
 	dapc_init();
+	apusys_init();
 	mcupm_init();
 	sspm_init();
 
@@ -36,7 +37,6 @@ static void soc_init(struct device *dev)
 
 	ufs_disable_refclk();
 	hdmi_low_power_setting();
-	bustracker_init();
 }
 
 static struct device_operations soc_ops = {

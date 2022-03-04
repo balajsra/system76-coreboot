@@ -28,6 +28,8 @@ CFLAGS_ramstage += $(CFLAGS_asan)
 $(obj)/ramstage/lib/asan.o: CFLAGS_asan =
 endif
 
+all-y += list.c
+
 decompressor-y += decompressor.c
 $(call src-to-obj,decompressor,$(dir)/decompressor.c): $(objcbfs)/bootblock.lz4
 $(call src-to-obj,decompressor,$(dir)/decompressor.c): CCACHE_EXTRAFILES=$(objcbfs)/bootblock.lz4
@@ -59,7 +61,6 @@ bootblock-y += memchr.c
 bootblock-y += memcmp.c
 bootblock-y += boot_device.c
 bootblock-y += fmap.c
-bootblcok-y += rtc.c
 
 verstage-y += prog_loaders.c
 verstage-y += prog_ops.c
@@ -147,6 +148,7 @@ ramstage-$(CONFIG_BOOTSPLASH) += bootsplash.c
 ramstage-$(CONFIG_BOOTSPLASH) += jpeg.c
 ramstage-$(CONFIG_COLLECT_TIMESTAMPS) += timestamp.c
 ramstage-$(CONFIG_COVERAGE) += libgcov.c
+ramstage-y += dp_aux.c
 ramstage-y += edid.c
 ramstage-y += edid_fill_fb.c
 ramstage-y += memrange.c
@@ -154,7 +156,6 @@ ramstage-$(CONFIG_GENERIC_GPIO_LIB) += gpio.c
 ramstage-$(CONFIG_GENERIC_UDELAY) += timer.c
 ramstage-y += b64_decode.c
 ramstage-$(CONFIG_ACPI_NHLT) += nhlt.c
-ramstage-y += list.c
 ramstage-$(CONFIG_FLATTENED_DEVICE_TREE) += device_tree.c
 ramstage-$(CONFIG_PAYLOAD_FIT_SUPPORT) += fit.c
 ramstage-$(CONFIG_PAYLOAD_FIT_SUPPORT) += fit_payload.c

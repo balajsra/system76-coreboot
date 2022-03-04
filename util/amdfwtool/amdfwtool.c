@@ -165,6 +165,7 @@ static void usage(void)
 	printf("--load-s0i3                    Set if load s0i3 firmware\n");
 	printf("--verstage <FILE>              Add verstage\n");
 	printf("--verstage_sig                 Add verstage signature\n");
+	printf("--recovery-ab                  Use the recovery A/B layout\n");
 	printf("\nBIOS options:\n");
 	printf("--instance <number>            Sets instance field for the next BIOS\n");
 	printf("                               firmware\n");
@@ -220,59 +221,60 @@ static void usage(void)
 }
 
 amd_fw_entry amd_psp_fw_table[] = {
-	{ .type = AMD_FW_PSP_PUBKEY, .level = PSP_BOTH },
-	{ .type = AMD_FW_PSP_BOOTLOADER, .level = PSP_BOTH },
-	{ .type = AMD_FW_PSP_SMU_FIRMWARE, .subprog = 0, .level = PSP_BOTH },
+	{ .type = AMD_FW_PSP_PUBKEY, .level = PSP_BOTH | PSP_BOTH_AB },
+	{ .type = AMD_FW_PSP_BOOTLOADER, .level = PSP_BOTH | PSP_LVL1_AB },
+	{ .type = AMD_FW_PSP_SMU_FIRMWARE, .subprog = 0, .level = PSP_BOTH | PSP_LVL2_AB },
 	{ .type = AMD_FW_PSP_RECOVERY, .level = PSP_LVL1 },
 	{ .type = AMD_FW_PSP_RTM_PUBKEY, .level = PSP_BOTH },
-	{ .type = AMD_FW_PSP_SECURED_OS, .level = PSP_LVL2 },
-	{ .type = AMD_FW_PSP_NVRAM, .level = PSP_LVL2 },
-	{ .type = AMD_FW_PSP_SMU_FIRMWARE, .subprog = 2, .level = PSP_BOTH },
-	{ .type = AMD_FW_PSP_SECURED_DEBUG, .level = PSP_LVL2 },
-	{ .type = AMD_FW_PSP_TRUSTLETS, .level = PSP_LVL2 },
-	{ .type = AMD_FW_PSP_TRUSTLETKEY, .level = PSP_LVL2 },
-	{ .type = AMD_FW_PSP_SMU_FIRMWARE2, .subprog = 2, .level = PSP_BOTH },
-	{ .type = AMD_FW_PSP_SMU_FIRMWARE, .subprog = 1, .level = PSP_BOTH },
-	{ .type = AMD_FW_PSP_SMU_FIRMWARE2, .subprog = 1, .level = PSP_BOTH },
-	{ .type = AMD_FW_PSP_SMU_FIRMWARE2, .level = PSP_BOTH },
-	{ .type = AMD_FW_PSP_SMUSCS, .level = PSP_BOTH  },
-	{ .type = AMD_PSP_FUSE_CHAIN, .level = PSP_LVL2 },
-	{ .type = AMD_DEBUG_UNLOCK, .level = PSP_LVL2 },
-	{ .type = AMD_HW_IPCFG, .level = PSP_LVL2 },
-	{ .type = AMD_WRAPPED_IKEK, .level = PSP_BOTH },
-	{ .type = AMD_TOKEN_UNLOCK, .level = PSP_BOTH },
-	{ .type = AMD_SEC_GASKET, .subprog = 0, .level = PSP_BOTH },
-	{ .type = AMD_SEC_GASKET, .subprog = 2, .level = PSP_BOTH },
-	{ .type = AMD_SEC_GASKET, .subprog = 1, .level = PSP_BOTH },
-	{ .type = AMD_MP2_FW, .subprog = 2, .level = PSP_LVL2 },
-	{ .type = AMD_MP2_FW, .subprog = 1, .level = PSP_LVL2 },
-	{ .type = AMD_MP2_FW, .subprog = 0, .level = PSP_LVL2 },
-	{ .type = AMD_DRIVER_ENTRIES, .level = PSP_LVL2 },
-	{ .type = AMD_FW_KVM_IMAGE, .level = PSP_LVL2},
-	{ .type = AMD_S0I3_DRIVER, .level = PSP_LVL2 },
-	{ .type = AMD_VBIOS_BTLOADER, .level = PSP_BOTH },
-	{ .type = AMD_FW_TOS_SEC_POLICY, .level = PSP_BOTH },
-	{ .type = AMD_FW_USB_PHY, .level = PSP_LVL2 },
-	{ .type = AMD_FW_DRTM_TA, .level = PSP_LVL2 },
-	{ .type = AMD_FW_KEYDB_BL, .level = PSP_BOTH },
-	{ .type = AMD_FW_KEYDB_TOS, .level = PSP_LVL2 },
-	{ .type = AMD_FW_DMCU_ERAM, .level = PSP_LVL2 },
-	{ .type = AMD_FW_DMCU_ISR, .level = PSP_LVL2 },
-	{ .type = AMD_RPMC_NVRAM, .level = PSP_LVL2 },
-	{ .type = AMD_FW_PSP_BOOTLOADER_AB, .level = PSP_LVL2 },
-	{ .type = AMD_ABL0, .level = PSP_BOTH },
-	{ .type = AMD_ABL1, .level = PSP_BOTH },
-	{ .type = AMD_ABL2, .level = PSP_BOTH },
-	{ .type = AMD_ABL3, .level = PSP_BOTH },
-	{ .type = AMD_ABL4, .level = PSP_BOTH },
-	{ .type = AMD_ABL5, .level = PSP_BOTH },
-	{ .type = AMD_ABL6, .level = PSP_BOTH },
-	{ .type = AMD_ABL7, .level = PSP_BOTH },
-	{ .type = AMD_FW_PSP_SMU_FIRMWARE, .subprog = 1, .level = PSP_BOTH },
-	{ .type = AMD_FW_PSP_SMU_FIRMWARE2, .subprog = 1, .level = PSP_BOTH },
+	{ .type = AMD_FW_PSP_SECURED_OS, .level = PSP_LVL2 | PSP_LVL2_AB },
+	{ .type = AMD_FW_PSP_NVRAM, .level = PSP_LVL2 | PSP_LVL2_AB },
+	{ .type = AMD_FW_PSP_SMU_FIRMWARE, .subprog = 2, .level = PSP_BOTH | PSP_LVL2_AB },
+	{ .type = AMD_FW_PSP_SECURED_DEBUG, .level = PSP_LVL2 | PSP_LVL2_AB },
+	{ .type = AMD_FW_PSP_TRUSTLETS, .level = PSP_LVL2 | PSP_LVL2_AB },
+	{ .type = AMD_FW_PSP_TRUSTLETKEY, .level = PSP_LVL2 | PSP_LVL2_AB },
+	{ .type = AMD_FW_PSP_SMU_FIRMWARE2, .subprog = 2, .level = PSP_BOTH | PSP_LVL2_AB },
+	{ .type = AMD_FW_PSP_SMU_FIRMWARE, .subprog = 1, .level = PSP_BOTH | PSP_LVL2_AB },
+	{ .type = AMD_FW_PSP_SMU_FIRMWARE2, .subprog = 1, .level = PSP_BOTH | PSP_LVL2_AB },
+	{ .type = AMD_FW_PSP_SMU_FIRMWARE2, .level = PSP_BOTH | PSP_LVL2_AB },
+	{ .type = AMD_FW_PSP_SMUSCS, .level = PSP_BOTH },
+	{ .type = AMD_PSP_FUSE_CHAIN, .level = PSP_LVL2 | PSP_LVL2_AB },
+	{ .type = AMD_DEBUG_UNLOCK, .level = PSP_LVL2 | PSP_LVL2_AB },
+	{ .type = AMD_HW_IPCFG, .level = PSP_LVL2 | PSP_LVL2_AB },
+	{ .type = AMD_WRAPPED_IKEK, .level = PSP_BOTH | PSP_BOTH_AB },
+	{ .type = AMD_TOKEN_UNLOCK, .level = PSP_BOTH | PSP_LVL2_AB },
+	{ .type = AMD_SEC_GASKET, .subprog = 0, .level = PSP_BOTH | PSP_LVL2_AB },
+	{ .type = AMD_SEC_GASKET, .subprog = 2, .level = PSP_BOTH | PSP_LVL2_AB },
+	{ .type = AMD_SEC_GASKET, .subprog = 1, .level = PSP_BOTH | PSP_LVL2_AB },
+	{ .type = AMD_MP2_FW, .subprog = 2, .level = PSP_LVL2 | PSP_LVL2_AB },
+	{ .type = AMD_MP2_FW, .subprog = 1, .level = PSP_LVL2 | PSP_LVL2_AB },
+	{ .type = AMD_MP2_FW, .subprog = 0, .level = PSP_LVL2 | PSP_LVL2_AB },
+	{ .type = AMD_DRIVER_ENTRIES, .level = PSP_LVL2 | PSP_LVL2_AB },
+	{ .type = AMD_FW_KVM_IMAGE, .level = PSP_LVL2 | PSP_LVL2_AB },
+	{ .type = AMD_S0I3_DRIVER, .level = PSP_LVL2 | PSP_LVL2_AB },
+	{ .type = AMD_VBIOS_BTLOADER, .level = PSP_BOTH | PSP_LVL2_AB },
+	{ .type = AMD_FW_TOS_SEC_POLICY, .level = PSP_BOTH | PSP_LVL2_AB },
+	{ .type = AMD_FW_USB_PHY, .level = PSP_LVL2 | PSP_LVL2_AB },
+	{ .type = AMD_FW_DRTM_TA, .level = PSP_LVL2 | PSP_LVL2_AB },
+	{ .type = AMD_FW_KEYDB_BL, .level = PSP_BOTH | PSP_LVL2_AB },
+	{ .type = AMD_FW_KEYDB_TOS, .level = PSP_LVL2 | PSP_LVL2_AB },
+	{ .type = AMD_FW_SPL, .level = PSP_LVL2 | PSP_LVL2_AB },
+	{ .type = AMD_FW_DMCU_ERAM, .level = PSP_LVL2 | PSP_LVL2_AB },
+	{ .type = AMD_FW_DMCU_ISR, .level = PSP_LVL2 | PSP_LVL2_AB },
+	{ .type = AMD_RPMC_NVRAM, .level = PSP_LVL2 | PSP_LVL2_AB },
+	{ .type = AMD_FW_PSP_BOOTLOADER_AB, .level = PSP_LVL2 | PSP_LVL2_AB },
+	{ .type = AMD_ABL0, .level = PSP_BOTH | PSP_LVL2_AB },
+	{ .type = AMD_ABL1, .level = PSP_BOTH | PSP_LVL2_AB },
+	{ .type = AMD_ABL2, .level = PSP_BOTH | PSP_LVL2_AB },
+	{ .type = AMD_ABL3, .level = PSP_BOTH | PSP_LVL2_AB },
+	{ .type = AMD_ABL4, .level = PSP_BOTH | PSP_LVL2_AB },
+	{ .type = AMD_ABL5, .level = PSP_BOTH | PSP_LVL2_AB },
+	{ .type = AMD_ABL6, .level = PSP_BOTH | PSP_LVL2_AB },
+	{ .type = AMD_ABL7, .level = PSP_BOTH | PSP_LVL2_AB },
+	{ .type = AMD_FW_PSP_SMU_FIRMWARE, .subprog = 1, .level = PSP_BOTH | PSP_LVL2_AB },
+	{ .type = AMD_FW_PSP_SMU_FIRMWARE2, .subprog = 1, .level = PSP_BOTH | PSP_LVL2_AB },
 	{ .type = AMD_FW_PSP_WHITELIST, .level = PSP_LVL2 },
-	{ .type = AMD_FW_PSP_VERSTAGE, .level = PSP_BOTH },
-	{ .type = AMD_FW_VERSTAGE_SIG, .level = PSP_BOTH },
+	{ .type = AMD_FW_PSP_VERSTAGE, .level = PSP_BOTH | PSP_BOTH_AB },
+	{ .type = AMD_FW_VERSTAGE_SIG, .level = PSP_BOTH | PSP_BOTH_AB },
 	{ .type = AMD_FW_INVALID },
 };
 
@@ -323,10 +325,14 @@ amd_bios_entry amd_bios_table[] = {
 	{ .type = AMD_BIOS_APOB_NV, .level = BDT_LVL2 },
 	{ .type = AMD_BIOS_PMUI, .inst = 1, .subpr = 0, .level = BDT_BOTH },
 	{ .type = AMD_BIOS_PMUD, .inst = 1, .subpr = 0, .level = BDT_BOTH },
+	{ .type = AMD_BIOS_PMUI, .inst = 2, .subpr = 0, .level = BDT_BOTH },
+	{ .type = AMD_BIOS_PMUD, .inst = 2, .subpr = 0, .level = BDT_BOTH },
 	{ .type = AMD_BIOS_PMUI, .inst = 4, .subpr = 0, .level = BDT_BOTH },
 	{ .type = AMD_BIOS_PMUD, .inst = 4, .subpr = 0, .level = BDT_BOTH },
 	{ .type = AMD_BIOS_PMUI, .inst = 1, .subpr = 1, .level = BDT_BOTH },
 	{ .type = AMD_BIOS_PMUD, .inst = 1, .subpr = 1, .level = BDT_BOTH },
+	{ .type = AMD_BIOS_PMUI, .inst = 2, .subpr = 1, .level = BDT_BOTH },
+	{ .type = AMD_BIOS_PMUD, .inst = 2, .subpr = 1, .level = BDT_BOTH },
 	{ .type = AMD_BIOS_PMUI, .inst = 4, .subpr = 1, .level = BDT_BOTH },
 	{ .type = AMD_BIOS_PMUD, .inst = 4, .subpr = 1, .level = BDT_BOTH },
 	{ .type = AMD_BIOS_UCODE, .inst = 0, .level = BDT_LVL2 },
@@ -343,16 +349,51 @@ amd_bios_entry amd_bios_table[] = {
 typedef struct _context {
 	char *rom;		/* target buffer, size of flash device */
 	uint32_t rom_size;	/* size of flash device */
+	uint32_t address_mode;	/* 0:abs address; 1:relative to flash; 2: relative to table */
 	uint32_t current;	/* pointer within flash & proxy buffer */
+	uint32_t current_table;
 } context;
 
-#define RUN_BASE(ctx) (0)
-#define RUN_OFFSET(ctx, offset) (RUN_BASE(ctx) + (offset))
+#define ADDRESS_MODE_0_PHY		0
+#define ADDRESS_MODE_1_REL_BIOS		1
+#define ADDRESS_MODE_2_REL_TAB		2
+#define ADDRESS_MODE_3_REL_SLOT		3
+
+#define RUN_BASE(ctx) (0xFFFFFFFF - (ctx).rom_size + 1)
+#define RUN_OFFSET_MODE(ctx, offset, mode) \
+		((mode) == ADDRESS_MODE_0_PHY ? RUN_BASE(ctx) + (offset) :	\
+		((mode) == ADDRESS_MODE_1_REL_BIOS ? (offset) :	\
+		((mode) == ADDRESS_MODE_2_REL_TAB ? (offset) - ctx.current_table : (offset))))
+#define RUN_OFFSET(ctx, offset) RUN_OFFSET_MODE((ctx), (offset), (ctx).address_mode)
+#define RUN_TO_OFFSET(ctx, run) ((ctx).address_mode == ADDRESS_MODE_0_PHY ?	\
+				(run) - RUN_BASE(ctx) : (run)) /* TODO: */
 #define RUN_CURRENT(ctx) RUN_OFFSET((ctx), (ctx).current)
+/* The mode in entry can not be higher than the header's.
+   For example, if table mode is 0, all the entry mode will be 0. */
+#define RUN_CURRENT_MODE(ctx, mode) RUN_OFFSET_MODE((ctx), (ctx).current, \
+		(ctx).address_mode < (mode) ? (ctx).address_mode : (mode))
 #define BUFF_OFFSET(ctx, offset) ((void *)((ctx).rom + (offset)))
 #define BUFF_CURRENT(ctx) BUFF_OFFSET((ctx), (ctx).current)
 #define BUFF_TO_RUN(ctx, ptr) RUN_OFFSET((ctx), ((char *)(ptr) - (ctx).rom))
+#define BUFF_TO_RUN_MODE(ctx, ptr, mode) RUN_OFFSET_MODE((ctx), ((char *)(ptr) - (ctx).rom), \
+		(ctx).address_mode < (mode) ? (ctx).address_mode : (mode))
 #define BUFF_ROOM(ctx) ((ctx).rom_size - (ctx).current)
+/* Only set the address mode in entry if the table is mode 2. */
+#define SET_ADDR_MODE(table, mode) \
+		((table)->header.additional_info_fields.address_mode ==	\
+		ADDRESS_MODE_2_REL_TAB ? (mode) : 0)
+#define SET_ADDR_MODE_BY_TABLE(table) \
+		SET_ADDR_MODE((table), (table)->header.additional_info_fields.address_mode)
+
+void assert_fw_entry(uint32_t count, uint32_t max, context *ctx)
+{
+	if (count >= max) {
+		fprintf(stderr, "Error: BIOS entries (%d) exceeds max allowed items "
+			"(%d)\n", count, max);
+		free(ctx->rom);
+		exit(1);
+	}
+}
 
 static void *new_psp_dir(context *ctx, int multi)
 {
@@ -369,7 +410,9 @@ static void *new_psp_dir(context *ctx, int multi)
 		ctx->current = ALIGN(ctx->current, TABLE_ALIGNMENT);
 
 	ptr = BUFF_CURRENT(*ctx);
-	((psp_directory_header *)ptr)->additional_info = ctx->current;
+	((psp_directory_header *)ptr)->num_entries = 0;
+	((psp_directory_header *)ptr)->additional_info = 0;
+	((psp_directory_header *)ptr)->additional_info_fields.address_mode = ctx->address_mode;
 	ctx->current += sizeof(psp_directory_header)
 			+ MAX_PSP_ENTRIES * sizeof(psp_directory_entry);
 	return ptr;
@@ -421,14 +464,16 @@ static void fill_dir_header(void *directory, uint32_t count, uint32_t cookie, co
 		break;
 	case PSP_COOKIE:
 	case PSPL2_COOKIE:
-		table_size = ctx->current - dir->header.additional_info;
+		table_size = ctx->current - ctx->current_table;
 		if ((table_size % TABLE_ALIGNMENT) != 0) {
 			fprintf(stderr, "The PSP table size should be 4K aligned\n");
 			exit(1);
 		}
 		dir->header.cookie = cookie;
 		dir->header.num_entries = count;
-		dir->header.additional_info = (table_size / 0x1000) | (1 << 10);
+		dir->header.additional_info_fields.dir_size = table_size / TABLE_ALIGNMENT;
+		dir->header.additional_info_fields.spi_block_size = 1;
+		dir->header.additional_info_fields.base_addr = 0;
 		/* checksum everything that comes after the Checksum field */
 		dir->header.checksum = fletcher32(&dir->header.num_entries,
 					count * sizeof(psp_directory_entry)
@@ -437,14 +482,16 @@ static void fill_dir_header(void *directory, uint32_t count, uint32_t cookie, co
 		break;
 	case BDT1_COOKIE:
 	case BDT2_COOKIE:
-		table_size = ctx->current - bdir->header.additional_info;
+		table_size = ctx->current - ctx->current_table;
 		if ((table_size % TABLE_ALIGNMENT) != 0) {
 			fprintf(stderr, "The BIOS table size should be 4K aligned\n");
 			exit(1);
 		}
 		bdir->header.cookie = cookie;
 		bdir->header.num_entries = count;
-		bdir->header.additional_info = (table_size / 0x1000) | (1 << 10);
+		bdir->header.additional_info_fields.dir_size = table_size / TABLE_ALIGNMENT;
+		bdir->header.additional_info_fields.spi_block_size = 1;
+		bdir->header.additional_info_fields.base_addr = 0;
 		/* checksum everything that comes after the Checksum field */
 		bdir->header.checksum = fletcher32(&bdir->header.num_entries,
 					count * sizeof(bios_directory_entry)
@@ -601,6 +648,7 @@ static void free_psp_firmware_filenames(amd_fw_entry *fw_table)
 		if (index->filename &&
 				index->type != AMD_FW_VERSTAGE_SIG &&
 				index->type != AMD_FW_PSP_VERSTAGE &&
+				index->type != AMD_FW_SPL &&
 				index->type != AMD_FW_PSP_WHITELIST) {
 			free(index->filename);
 		}
@@ -620,9 +668,34 @@ static void free_bdt_firmware_filenames(amd_bios_entry *fw_table)
 	}
 }
 
+static void integrate_psp_ab(context *ctx, psp_directory_table *pspdir,
+		psp_directory_table *pspdir2, amd_fw_type ab)
+{
+	uint32_t count;
+	uint32_t current_table_save;
+
+	current_table_save = ctx->current_table;
+	ctx->current_table = (char *)pspdir - ctx->rom;
+	count = pspdir->header.num_entries;
+	assert_fw_entry(count, MAX_PSP_ENTRIES, ctx);
+	pspdir->entries[count].type = (uint8_t)ab;
+	pspdir->entries[count].subprog = 0;
+	pspdir->entries[count].rsvd = 0;
+	pspdir->entries[count].addr = BUFF_TO_RUN_MODE(*ctx, pspdir2, ADDRESS_MODE_1_REL_BIOS);
+	pspdir->entries[count].address_mode = SET_ADDR_MODE(pspdir, ADDRESS_MODE_1_REL_BIOS);
+	pspdir->entries[count].size = pspdir2->header.num_entries *
+				sizeof(psp_directory_entry) +
+				sizeof(psp_directory_header);
+
+	count++;
+	pspdir->header.num_entries = count;
+	ctx->current_table = current_table_save;
+}
+
 static void integrate_psp_firmwares(context *ctx,
 					psp_directory_table *pspdir,
 					psp_directory_table *pspdir2,
+					psp_directory_table *pspdir2_b,
 					amd_fw_entry *fw_table,
 					uint32_t cookie,
 					amd_cb_config *cb_config)
@@ -630,6 +703,8 @@ static void integrate_psp_firmwares(context *ctx,
 	ssize_t bytes;
 	unsigned int i, count;
 	int level;
+	uint32_t current_table_save;
+	bool recovery_ab = cb_config->recovery_ab;
 
 	/* This function can create a primary table, a secondary table, or a
 	 * flattened table which contains all applicable types.  These if-else
@@ -638,7 +713,7 @@ static void integrate_psp_firmwares(context *ctx,
 	 * 1st-level cookie may indicate level 1 or flattened.  If the caller
 	 * passes a pointer to a 2nd-level table, then assume not flat.
 	 */
-	if (cb_config->multi_level == 0)
+	if (!cb_config->multi_level)
 		level = PSP_BOTH;
 	else if (cookie == PSPL2_COOKIE)
 		level = PSP_LVL2;
@@ -647,11 +722,23 @@ static void integrate_psp_firmwares(context *ctx,
 	else
 		level = PSP_BOTH;
 
+	if (recovery_ab) {
+		if (cookie == PSPL2_COOKIE)
+			level = PSP_LVL2_AB;
+		else if (pspdir2)
+			level = PSP_LVL1_AB;
+		else
+			level = PSP_BOTH_AB;
+	}
+	current_table_save = ctx->current_table;
+	ctx->current_table = (char *)pspdir - ctx->rom;
 	ctx->current = ALIGN(ctx->current, TABLE_ALIGNMENT);
 
 	for (i = 0, count = 0; fw_table[i].type != AMD_FW_INVALID; i++) {
 		if (!(fw_table[i].level & level))
 			continue;
+
+		assert_fw_entry(count, MAX_PSP_ENTRIES, ctx);
 
 		if (fw_table[i].type == AMD_TOKEN_UNLOCK) {
 			if (!fw_table[i].other)
@@ -660,6 +747,7 @@ static void integrate_psp_firmwares(context *ctx,
 			pspdir->entries[count].type = fw_table[i].type;
 			pspdir->entries[count].size = 4096; /* TODO: doc? */
 			pspdir->entries[count].addr = RUN_CURRENT(*ctx);
+			pspdir->entries[count].address_mode = SET_ADDR_MODE_BY_TABLE(pspdir);
 			pspdir->entries[count].subprog = fw_table[i].subprog;
 			pspdir->entries[count].rsvd = 0;
 			ctx->current = ALIGN(ctx->current + 4096, 0x100U);
@@ -670,6 +758,7 @@ static void integrate_psp_firmwares(context *ctx,
 			pspdir->entries[count].rsvd = 0;
 			pspdir->entries[count].size = 0xFFFFFFFF;
 			pspdir->entries[count].addr = fw_table[i].other;
+			pspdir->entries[count].address_mode = 0;
 			count++;
 		} else if (fw_table[i].type == AMD_FW_PSP_NVRAM) {
 			if (fw_table[i].filename == NULL)
@@ -691,7 +780,10 @@ static void integrate_psp_firmwares(context *ctx,
 			pspdir->entries[count].rsvd = 0;
 			pspdir->entries[count].size = ALIGN(bytes,
 							ERASE_ALIGNMENT);
-			pspdir->entries[count].addr = RUN_CURRENT(*ctx);
+			pspdir->entries[count].addr =
+				RUN_CURRENT_MODE(*ctx, ADDRESS_MODE_1_REL_BIOS);
+			pspdir->entries[count].address_mode =
+				SET_ADDR_MODE(pspdir, ADDRESS_MODE_1_REL_BIOS);
 
 			ctx->current = ALIGN(ctx->current + bytes,
 							BLOB_ERASE_ALIGNMENT);
@@ -709,6 +801,7 @@ static void integrate_psp_firmwares(context *ctx,
 			pspdir->entries[count].rsvd = 0;
 			pspdir->entries[count].size = (uint32_t)bytes;
 			pspdir->entries[count].addr = RUN_CURRENT(*ctx);
+			pspdir->entries[count].address_mode = SET_ADDR_MODE_BY_TABLE(pspdir);
 
 			ctx->current = ALIGN(ctx->current + bytes,
 							BLOB_ALIGNMENT);
@@ -718,7 +811,14 @@ static void integrate_psp_firmwares(context *ctx,
 		}
 	}
 
-	if (pspdir2) {
+	if (recovery_ab && (pspdir2 != NULL)) {
+		pspdir->header.num_entries = count;
+		integrate_psp_ab(ctx, pspdir, pspdir2, AMD_FW_RECOVERYAB_A);
+		if (pspdir2_b != NULL)
+			integrate_psp_ab(ctx, pspdir, pspdir2_b, AMD_FW_RECOVERYAB_B);
+		count = pspdir->header.num_entries;
+	} else if (pspdir2 != NULL) {
+		assert_fw_entry(count, MAX_PSP_ENTRIES, ctx);
 		pspdir->entries[count].type = AMD_FW_L2_PTR;
 		pspdir->entries[count].subprog = 0;
 		pspdir->entries[count].rsvd = 0;
@@ -726,20 +826,54 @@ static void integrate_psp_firmwares(context *ctx,
 					+ pspdir2->header.num_entries
 					* sizeof(psp_directory_entry);
 
-		pspdir->entries[count].addr = BUFF_TO_RUN(*ctx, pspdir2);
+		pspdir->entries[count].addr =
+				BUFF_TO_RUN_MODE(*ctx, pspdir2, ADDRESS_MODE_1_REL_BIOS);
+		pspdir->entries[count].address_mode =
+				SET_ADDR_MODE(pspdir, ADDRESS_MODE_1_REL_BIOS);
 		count++;
 	}
 
-	if (count > MAX_PSP_ENTRIES) {
-		fprintf(stderr, "Error: PSP entries exceed max allowed items\n");
-		free(ctx->rom);
-		exit(1);
-	}
-
 	fill_dir_header(pspdir, count, cookie, ctx);
+	ctx->current_table = current_table_save;
 }
 
-static void *new_bios_dir(context *ctx, int multi)
+static void add_psp_firmware_entry(context *ctx,
+					psp_directory_table *pspdir,
+					void *table, amd_fw_type type, uint32_t size)
+{
+	uint32_t count = pspdir->header.num_entries;
+	uint32_t index;
+	uint32_t current_table_save;
+
+	current_table_save = ctx->current_table;
+	ctx->current_table = (char *)pspdir - ctx->rom;
+
+	/* If there is an entry of "type", replace it. */
+	for (index = 0; index < count; index++) {
+		if (pspdir->entries[index].type == (uint8_t)type)
+			break;
+	}
+
+	assert_fw_entry(count, MAX_PSP_ENTRIES, ctx);
+	pspdir->entries[index].type = (uint8_t)type;
+	pspdir->entries[index].subprog = 0;
+	pspdir->entries[index].rsvd = 0;
+	pspdir->entries[index].addr = BUFF_TO_RUN(*ctx, table);
+	pspdir->entries[index].address_mode = SET_ADDR_MODE_BY_TABLE(pspdir);
+	pspdir->entries[index].size = size;
+	if (index == count)
+		count++;
+
+	pspdir->header.num_entries = count;
+	pspdir->header.checksum = fletcher32(&pspdir->header.num_entries,
+					count * sizeof(psp_directory_entry)
+					+ sizeof(pspdir->header.num_entries)
+					+ sizeof(pspdir->header.additional_info));
+
+	ctx->current_table = current_table_save;
+}
+
+static void *new_bios_dir(context *ctx, bool multi)
 {
 	void *ptr;
 
@@ -753,7 +887,9 @@ static void *new_bios_dir(context *ctx, int multi)
 	else
 		ctx->current = ALIGN(ctx->current, TABLE_ALIGNMENT);
 	ptr = BUFF_CURRENT(*ctx);
-	((bios_directory_hdr *) ptr)->additional_info = ctx->current;
+	((bios_directory_hdr *) ptr)->additional_info = 0;
+	((bios_directory_hdr *) ptr)->additional_info_fields.address_mode = ctx->address_mode;
+	ctx->current_table = ctx->current;
 	ctx->current += sizeof(bios_directory_hdr)
 			+ MAX_BIOS_ENTRIES * sizeof(bios_directory_entry);
 	return ptr;
@@ -822,7 +958,7 @@ static void integrate_bios_firmwares(context *ctx,
 	 * 1st-level cookie may indicate level 1 or flattened.  If the caller
 	 * passes a pointer to a 2nd-level table, then assume not flat.
 	 */
-	if (cb_config->multi_level == 0)
+	if (!cb_config->multi_level)
 		level = BDT_BOTH;
 	else if (cookie == BDT2_COOKIE)
 		level = BDT_LVL2;
@@ -888,6 +1024,7 @@ static void integrate_bios_firmwares(context *ctx,
 		if (fw_table[i].type == AMD_BIOS_PSP_SHARED_MEM &&
 				(!fw_table[i].dest || !fw_table[i].size))
 			continue;
+		assert_fw_entry(count, MAX_BIOS_ENTRIES, ctx);
 
 		biosdir->entries[count].type = fw_table[i].type;
 		biosdir->entries[count].region_type = fw_table[i].region_type;
@@ -904,16 +1041,21 @@ static void integrate_bios_firmwares(context *ctx,
 		case AMD_BIOS_APOB:
 			biosdir->entries[count].size = fw_table[i].size;
 			biosdir->entries[count].source = fw_table[i].src;
+			biosdir->entries[count].address_mode = SET_ADDR_MODE_BY_TABLE(biosdir);
 			break;
 		case AMD_BIOS_APOB_NV:
 			if (fw_table[i].src) {
 				/* If source is given, use that and its size */
 				biosdir->entries[count].source = fw_table[i].src;
+				biosdir->entries[count].address_mode =
+						SET_ADDR_MODE(biosdir, ADDRESS_MODE_1_REL_BIOS);
 				biosdir->entries[count].size = fw_table[i].size;
 			} else {
 				/* Else reserve size bytes within amdfw.rom */
 				ctx->current = ALIGN(ctx->current, ERASE_ALIGNMENT);
 				biosdir->entries[count].source = RUN_CURRENT(*ctx);
+				biosdir->entries[count].address_mode =
+						SET_ADDR_MODE(biosdir, ADDRESS_MODE_1_REL_BIOS);
 				biosdir->entries[count].size = ALIGN(
 						fw_table[i].size, ERASE_ALIGNMENT);
 				memset(BUFF_CURRENT(*ctx), 0xff,
@@ -926,12 +1068,16 @@ static void integrate_bios_firmwares(context *ctx,
 			/* Don't make a 2nd copy, point to the same one */
 			if (level == BDT_LVL1 && locate_bdt2_bios(biosdir2, &source, &size)) {
 				biosdir->entries[count].source = source;
+				biosdir->entries[count].address_mode =
+						SET_ADDR_MODE(biosdir, ADDRESS_MODE_1_REL_BIOS);
 				biosdir->entries[count].size = size;
 				break;
 			}
 
 			/* level 2, or level 1 and no copy found in level 2 */
 			biosdir->entries[count].source = fw_table[i].src;
+			biosdir->entries[count].address_mode =
+						SET_ADDR_MODE(biosdir, ADDRESS_MODE_1_REL_BIOS);
 			biosdir->entries[count].dest = fw_table[i].dest;
 			biosdir->entries[count].size = fw_table[i].size;
 
@@ -945,7 +1091,10 @@ static void integrate_bios_firmwares(context *ctx,
 				exit(1);
 			}
 
-			biosdir->entries[count].source = RUN_CURRENT(*ctx);
+			biosdir->entries[count].source =
+				RUN_CURRENT_MODE(*ctx, ADDRESS_MODE_1_REL_BIOS);
+			biosdir->entries[count].address_mode =
+				SET_ADDR_MODE(biosdir, ADDRESS_MODE_1_REL_BIOS);
 
 			ctx->current = ALIGN(ctx->current + bytes, 0x100U);
 			break;
@@ -968,6 +1117,7 @@ static void integrate_bios_firmwares(context *ctx,
 
 			biosdir->entries[count].size = (uint32_t)bytes;
 			biosdir->entries[count].source = RUN_CURRENT(*ctx);
+			biosdir->entries[count].address_mode = SET_ADDR_MODE_BY_TABLE(biosdir);
 
 			ctx->current = ALIGN(ctx->current + bytes, 0x100U);
 			break;
@@ -977,6 +1127,7 @@ static void integrate_bios_firmwares(context *ctx,
 	}
 
 	if (biosdir2) {
+		assert_fw_entry(count, MAX_BIOS_ENTRIES, ctx);
 		biosdir->entries[count].type = AMD_BIOS_L2_PTR;
 		biosdir->entries[count].region_type = 0;
 		biosdir->entries[count].size =
@@ -984,6 +1135,8 @@ static void integrate_bios_firmwares(context *ctx,
 					* sizeof(bios_directory_entry);
 		biosdir->entries[count].source =
 					BUFF_TO_RUN(*ctx, biosdir2);
+		biosdir->entries[count].address_mode =
+					SET_ADDR_MODE(biosdir, ADDRESS_MODE_1_REL_BIOS);
 		biosdir->entries[count].subprog = 0;
 		biosdir->entries[count].inst = 0;
 		biosdir->entries[count].copy = 0;
@@ -992,13 +1145,6 @@ static void integrate_bios_firmwares(context *ctx,
 		biosdir->entries[count].reset = 0;
 		biosdir->entries[count].ro = 0;
 		count++;
-	}
-
-	if (count > MAX_BIOS_ENTRIES) {
-		fprintf(stderr, "Error: BIOS entries (%d) exceeds max allowed items "
-			"(%d)\n", count, MAX_BIOS_ENTRIES);
-		free(ctx->rom);
-		exit(1);
 	}
 
 	fill_dir_header(biosdir, count, cookie, ctx);
@@ -1014,6 +1160,7 @@ enum {
 	AMDFW_OPT_IMC,
 	AMDFW_OPT_GEC,
 	AMDFW_OPT_COMBO,
+	AMDFW_OPT_RECOVERY_AB,
 	AMDFW_OPT_MULTILEVEL,
 	AMDFW_OPT_NVRAM,
 
@@ -1023,6 +1170,7 @@ enum {
 	AMDFW_OPT_USE_PSPSECUREOS,
 	AMDFW_OPT_LOAD_MP2FW,
 	AMDFW_OPT_LOAD_S0I3,
+	AMDFW_OPT_SPL_TABLE,
 	AMDFW_OPT_VERSTAGE,
 	AMDFW_OPT_VERSTAGE_SIG,
 
@@ -1060,6 +1208,7 @@ static struct option long_options[] = {
 	{"gec",              required_argument, 0, AMDFW_OPT_GEC },
 	/* PSP Directory Table items */
 	{"combo-capable",          no_argument, 0, AMDFW_OPT_COMBO },
+	{"recovery-ab",            no_argument, 0, AMDFW_OPT_RECOVERY_AB },
 	{"multilevel",             no_argument, 0, AMDFW_OPT_MULTILEVEL },
 	{"nvram",            required_argument, 0, AMDFW_OPT_NVRAM },
 	{"soft-fuse",        required_argument, 0, AMDFW_OPT_FUSE },
@@ -1068,6 +1217,7 @@ static struct option long_options[] = {
 	{"use-pspsecureos",        no_argument, 0, AMDFW_OPT_USE_PSPSECUREOS },
 	{"load-mp2-fw",            no_argument, 0, AMDFW_OPT_LOAD_MP2FW },
 	{"load-s0i3",              no_argument, 0, AMDFW_OPT_LOAD_S0I3 },
+	{"spl-table",        required_argument, 0, AMDFW_OPT_SPL_TABLE },
 	{"verstage",         required_argument, 0, AMDFW_OPT_VERSTAGE },
 	{"verstage_sig",     required_argument, 0, AMDFW_OPT_VERSTAGE_SIG },
 	/* BIOS Directory Table items */
@@ -1271,8 +1421,10 @@ int main(int argc, char **argv)
 	char *tmp;
 	char *rom = NULL;
 	embedded_firmware *amd_romsig;
-	psp_directory_table *pspdir;
-	int comboable = 0;
+	psp_directory_table *pspdir = NULL;
+	psp_directory_table *pspdir2 = NULL;
+	psp_directory_table *pspdir2_b = NULL;
+	bool comboable = false;
 	int fuse_defined = 0;
 	int targetfd;
 	char *output = NULL, *config = NULL;
@@ -1293,12 +1445,13 @@ int main(int argc, char **argv)
 	int debug = 0;
 	int list_deps = 0;
 
-	cb_config.have_whitelist = 0;
-	cb_config.unlock_secure = 0;
-	cb_config.use_secureos = 0;
-	cb_config.load_mp2_fw = 0;
-	cb_config.s0i3 = 0;
-	cb_config.multi_level = 0;
+	cb_config.have_whitelist = false;
+	cb_config.unlock_secure = false;
+	cb_config.use_secureos = false;
+	cb_config.load_mp2_fw = false;
+	cb_config.s0i3 = false;
+	cb_config.multi_level = false;
+	cb_config.recovery_ab = false;
 
 	while (1) {
 		int optindex = 0;
@@ -1322,24 +1475,27 @@ int main(int argc, char **argv)
 			sub = instance = 0;
 			break;
 		case AMDFW_OPT_COMBO:
-			comboable = 1;
+			comboable = true;
+			break;
+		case AMDFW_OPT_RECOVERY_AB:
+			cb_config.recovery_ab = true;
 			break;
 		case AMDFW_OPT_MULTILEVEL:
-			cb_config.multi_level = 1;
+			cb_config.multi_level = true;
 			break;
 		case AMDFW_OPT_UNLOCK:
 			register_fw_token_unlock();
-			cb_config.unlock_secure = 1;
+			cb_config.unlock_secure = true;
 			sub = instance = 0;
 			break;
 		case AMDFW_OPT_USE_PSPSECUREOS:
-			cb_config.use_secureos = 1;
+			cb_config.use_secureos = true;
 			break;
 		case AMDFW_OPT_INSTANCE:
 			instance = strtoul(optarg, &tmp, 16);
 			break;
 		case AMDFW_OPT_LOAD_MP2FW:
-			cb_config.load_mp2_fw = 1;
+			cb_config.load_mp2_fw = true;
 			break;
 		case AMDFW_OPT_NVRAM:
 			register_fw_filename(AMD_FW_PSP_NVRAM, sub, optarg);
@@ -1398,12 +1554,17 @@ int main(int argc, char **argv)
 			sub = instance = 0;
 			break;
 		case AMDFW_OPT_LOAD_S0I3:
-			cb_config.s0i3 = 1;
+			cb_config.s0i3 = true;
+			break;
+		case AMDFW_OPT_SPL_TABLE:
+			register_fw_filename(AMD_FW_SPL, sub, optarg);
+			sub = instance = 0;
+			cb_config.have_mb_spl = true;
 			break;
 		case AMDFW_OPT_WHITELIST:
 			register_fw_filename(AMD_FW_PSP_WHITELIST, sub, optarg);
 			sub = instance = 0;
-			cb_config.have_whitelist = 1;
+			cb_config.have_whitelist = true;
 			break;
 		case AMDFW_OPT_VERSTAGE:
 			register_fw_filename(AMD_FW_PSP_VERSTAGE, sub, optarg);
@@ -1523,6 +1684,10 @@ int main(int argc, char **argv)
 		retval = 1;
 	}
 
+	if (cb_config.recovery_ab) {
+		cb_config.multi_level = true;
+	}
+
 	if (retval) {
 		usage();
 		return retval;
@@ -1574,8 +1739,6 @@ int main(int argc, char **argv)
 		romsig_offset = ctx.current = dir_location - rom_base_address;
 	else
 		romsig_offset = ctx.current = AMD_ROMSIG_OFFSET;
-	printf("    AMDFWTOOL  Using firmware directory location of 0x%08x\n",
-			RUN_CURRENT(ctx));
 
 	amd_romsig = BUFF_OFFSET(ctx, romsig_offset);
 	amd_romsig->signature = EMBEDDED_FW_SIGNATURE;
@@ -1594,28 +1757,46 @@ int main(int argc, char **argv)
 		fprintf(stderr, "WARNING: No SOC name specified.\n");
 	}
 
+	if (amd_romsig->efs_gen.gen == EFS_SECOND_GEN)
+		ctx.address_mode = ADDRESS_MODE_1_REL_BIOS;
+	else
+		ctx.address_mode = ADDRESS_MODE_0_PHY;
+	printf("    AMDFWTOOL  Using firmware directory location of %s address: 0x%08x\n",
+			ctx.address_mode == ADDRESS_MODE_0_PHY ? "absolute" : "relative",
+			RUN_CURRENT(ctx));
+
 	integrate_firmwares(&ctx, amd_romsig, amd_fw_table);
 
 	ctx.current = ALIGN(ctx.current, 0x10000U); /* TODO: is it necessary? */
+	ctx.current_table = 0;
 
 	if (cb_config.multi_level) {
 		/* Do 2nd PSP directory followed by 1st */
-		psp_directory_table *pspdir2 = new_psp_dir(&ctx, cb_config.multi_level);
-		integrate_psp_firmwares(&ctx, pspdir2, 0,
-						amd_psp_fw_table, PSPL2_COOKIE, &cb_config);
-
+		pspdir2 = new_psp_dir(&ctx, cb_config.multi_level);
+		integrate_psp_firmwares(&ctx, pspdir2, NULL, NULL,
+					amd_psp_fw_table, PSPL2_COOKIE, &cb_config);
+		if (cb_config.recovery_ab) {
+			/* B is same as above directories for A */
+			/* Skip creating pspdir2_b here to save flash space. Related
+			 * biosdir2_b will be skipped automatically. */
+			pspdir2_b = new_psp_dir(&ctx, cb_config.multi_level);
+			integrate_psp_firmwares(&ctx, pspdir2_b, NULL, NULL,
+					amd_psp_fw_table, PSPL2_COOKIE, &cb_config);
+		} else {
+			pspdir2_b = NULL; /* More explicitly */
+		}
 		pspdir = new_psp_dir(&ctx, cb_config.multi_level);
-		integrate_psp_firmwares(&ctx, pspdir, pspdir2,
+		integrate_psp_firmwares(&ctx, pspdir, pspdir2, pspdir2_b,
 						amd_psp_fw_table, PSP_COOKIE, &cb_config);
 	} else {
 		/* flat: PSP 1 cookie and no pointer to 2nd table */
 		pspdir = new_psp_dir(&ctx, cb_config.multi_level);
-		integrate_psp_firmwares(&ctx, pspdir, 0,
+		integrate_psp_firmwares(&ctx, pspdir, NULL, NULL,
 						amd_psp_fw_table, PSP_COOKIE, &cb_config);
 	}
 
 	if (comboable)
-		amd_romsig->combo_psp_directory = BUFF_TO_RUN(ctx, pspdir);
+		amd_romsig->new_psp_directory = BUFF_TO_RUN(ctx, pspdir);
 	else
 		amd_romsig->psp_directory = BUFF_TO_RUN(ctx, pspdir);
 
@@ -1632,28 +1813,44 @@ int main(int argc, char **argv)
 #endif
 
 	if (have_bios_tables(amd_bios_table)) {
-		bios_directory_table *biosdir;
+		bios_directory_table *biosdir = NULL;
 		if (cb_config.multi_level) {
 			/* Do 2nd level BIOS directory followed by 1st */
-			bios_directory_table *biosdir2 =
-						new_bios_dir(&ctx, cb_config.multi_level);
-			integrate_bios_firmwares(&ctx, biosdir2, 0,
-						amd_bios_table, BDT2_COOKIE, &cb_config);
+			bios_directory_table *biosdir2 = NULL;
+			bios_directory_table *biosdir2_b = NULL;
 
-			biosdir = new_bios_dir(&ctx, cb_config.multi_level);
-			integrate_bios_firmwares(&ctx, biosdir, biosdir2,
+			biosdir2 = new_bios_dir(&ctx, cb_config.multi_level);
+
+			integrate_bios_firmwares(&ctx, biosdir2, NULL,
+						amd_bios_table, BDT2_COOKIE, &cb_config);
+			if (cb_config.recovery_ab) {
+				if (pspdir2_b != NULL) {
+					biosdir2_b = new_bios_dir(&ctx, cb_config.multi_level);
+					integrate_bios_firmwares(&ctx, biosdir2_b, NULL,
+						amd_bios_table, BDT2_COOKIE, &cb_config);
+				}
+				add_psp_firmware_entry(&ctx, pspdir2, biosdir2,
+					AMD_FW_BIOS_TABLE, TABLE_ALIGNMENT);
+				if (pspdir2_b != NULL)
+					add_psp_firmware_entry(&ctx, pspdir2_b, biosdir2_b,
+						AMD_FW_BIOS_TABLE, TABLE_ALIGNMENT);
+			} else {
+				biosdir = new_bios_dir(&ctx, cb_config.multi_level);
+				integrate_bios_firmwares(&ctx, biosdir, biosdir2,
 						amd_bios_table, BDT1_COOKIE, &cb_config);
+			}
 		} else {
 			/* flat: BDT1 cookie and no pointer to 2nd table */
 			biosdir = new_bios_dir(&ctx, cb_config.multi_level);
-			integrate_bios_firmwares(&ctx, biosdir, 0,
+			integrate_bios_firmwares(&ctx, biosdir, NULL,
 						amd_bios_table, BDT1_COOKIE, &cb_config);
 		}
 		switch (soc_id) {
 		case PLATFORM_RENOIR:
 		case PLATFORM_LUCIENNE:
 		case PLATFORM_CEZANNE:
-			amd_romsig->bios3_entry = BUFF_TO_RUN(ctx, biosdir);
+			if (!cb_config.recovery_ab)
+				amd_romsig->bios3_entry = BUFF_TO_RUN(ctx, biosdir);
 			break;
 		case PLATFORM_MENDOCINO:
 			break;

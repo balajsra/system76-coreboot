@@ -14,6 +14,7 @@ static fsp_dxio_descriptor guybrush_czn_dxio_descriptors[] = {
 		.port_present = true,
 		.start_logical_lane = 0,
 		.end_logical_lane = 0,
+		.link_speed_capability = 3,
 		.device_number = PCI_SLOT(WLAN_DEVFN),
 		.function_number = PCI_FUNC(WLAN_DEVFN),
 		.link_aspm = ASPM_L1,
@@ -28,6 +29,7 @@ static fsp_dxio_descriptor guybrush_czn_dxio_descriptors[] = {
 		.port_present = true,
 		.start_logical_lane = 1,
 		.end_logical_lane = 1,
+		.link_speed_capability = 3,
 		.device_number = PCI_SLOT(SD_DEVFN),
 		.function_number = PCI_FUNC(SD_DEVFN),
 		.link_aspm = ASPM_L1,
@@ -43,6 +45,7 @@ static fsp_dxio_descriptor guybrush_czn_dxio_descriptors[] = {
 		.port_present = true,
 		.start_logical_lane = 2,
 		.end_logical_lane = 2,
+		.link_speed_capability = 3,
 		.device_number = PCI_SLOT(WWAN_DEVFN),
 		.function_number = PCI_FUNC(WWAN_DEVFN),
 		.link_aspm = ASPM_L1,
@@ -57,6 +60,7 @@ static fsp_dxio_descriptor guybrush_czn_dxio_descriptors[] = {
 		.port_present = true,
 		.start_logical_lane = 4,
 		.end_logical_lane = 7,
+		.link_speed_capability = 3,
 		.device_number = PCI_SLOT(NVME_DEVFN),
 		.function_number = PCI_FUNC(NVME_DEVFN),
 		.link_aspm = ASPM_L1,
@@ -91,7 +95,7 @@ static fsp_dxio_descriptor guybrush_czn_dxio_descriptors[] = {
 };
 
 /* TODO: verify the DDI table, since this is mostly an educated guess right now */
-static const fsp_ddi_descriptor guybrush_czn_ddi_descriptors[] = {
+static fsp_ddi_descriptor guybrush_czn_ddi_descriptors[] = {
 	{ /* DDI0 - eDP */
 		.connector_type = DDI_EDP,
 		.aux_index = DDI_AUX1,
@@ -123,6 +127,10 @@ void __weak variant_update_dxio_descriptors(fsp_dxio_descriptor *dxio_descriptor
 {
 }
 
+void __weak variant_update_ddi_descriptors(fsp_ddi_descriptor *ddi_descriptors)
+{
+}
+
 void mainboard_get_dxio_ddi_descriptors(
 		const fsp_dxio_descriptor **dxio_descs, size_t *dxio_num,
 		const fsp_ddi_descriptor **ddi_descs, size_t *ddi_num)
@@ -139,6 +147,7 @@ void mainboard_get_dxio_ddi_descriptors(
 		guybrush_czn_dxio_descriptors[WWAN_NVME].gpio_group_id = GPIO_18;
 
 	variant_update_dxio_descriptors(guybrush_czn_dxio_descriptors);
+	variant_update_ddi_descriptors(guybrush_czn_ddi_descriptors);
 
 	*dxio_descs = guybrush_czn_dxio_descriptors;
 	*dxio_num = ARRAY_SIZE(guybrush_czn_dxio_descriptors);

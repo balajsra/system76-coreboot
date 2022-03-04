@@ -16,13 +16,12 @@ config SOC_SPECIFIC_OPTIONS
 	select ARCH_RAMSTAGE_X86_32
 	select ARCH_X86
 	select BOOT_DEVICE_SUPPORTS_WRITES if BOOT_DEVICE_SPI_FLASH
-	select CPU_INFO_V2
 	select DRIVERS_USB_ACPI
 	select DRIVERS_I2C_DESIGNWARE
-	select COOP_MULTITASKING
 	select DRIVERS_USB_PCI_XHCI
-	select FSP_COMPRESS_FSP_M_LZMA
-	select FSP_COMPRESS_FSP_S_LZMA
+	select FSP_COMPRESS_FSP_M_LZMA if !ASYNC_FILE_LOADING
+	select FSP_COMPRESS_FSP_M_LZ4 if ASYNC_FILE_LOADING
+	select FSP_COMPRESS_FSP_S_LZ4
 	select GENERIC_GPIO_LIB
 	select HAVE_ACPI_TABLES
 	select HAVE_CF9_RESET
@@ -31,14 +30,13 @@ config SOC_SPECIFIC_OPTIONS
 	select HAVE_SMI_HANDLER
 	select IDT_IN_EVERY_STAGE
 	select PARALLEL_MP_AP_WORK
-	select PAYLOAD_PRELOAD
 	select PLATFORM_USES_FSP2_0
 	select PROVIDES_ROM_SHARING
 	select PSP_VERSTAGE_CCP_DMA if VBOOT_STARTS_BEFORE_BOOTBLOCK
 	select RESET_VECTOR_IN_RAM
 	select RTC
 	select SOC_AMD_COMMON
-	select SOC_AMD_COMMON_BLOCK_ACP
+	select SOC_AMD_COMMON_BLOCK_ACP_GEN1
 	select SOC_AMD_COMMON_BLOCK_ACPI
 	select SOC_AMD_COMMON_BLOCK_ACPIMMIO
 	select SOC_AMD_COMMON_BLOCK_ACPI_ALIB
@@ -51,9 +49,9 @@ config SOC_SPECIFIC_OPTIONS
 	select SOC_AMD_COMMON_BLOCK_GRAPHICS
 	select SOC_AMD_COMMON_BLOCK_HAS_ESPI
 	select SOC_AMD_COMMON_BLOCK_I2C
+	select SOC_AMD_COMMON_BLOCK_I2C_PAD_CTRL
 	select SOC_AMD_COMMON_BLOCK_IOMMU
 	select SOC_AMD_COMMON_BLOCK_LPC
-	select SOC_AMD_COMMON_BLOCK_LPC_SPI_DMA
 	select SOC_AMD_COMMON_BLOCK_MCAX
 	select SOC_AMD_COMMON_BLOCK_NONCAR
 	select SOC_AMD_COMMON_BLOCK_PCI
@@ -73,10 +71,13 @@ config SOC_SPECIFIC_OPTIONS
 	select SOC_AMD_COMMON_FSP_DMI_TABLES
 	select SOC_AMD_COMMON_FSP_PCI
 	select SSE2
-	select TIMER_QUEUE
 	select UDK_2017_BINDING
+	select USE_FSP_NOTIFY_PHASE_POST_PCI_ENUM
+	select USE_FSP_NOTIFY_PHASE_READY_TO_BOOT
+	select USE_FSP_NOTIFY_PHASE_END_OF_FIRMWARE
+	select VBOOT_DEFINE_WIDEVINE_COUNTERS if VBOOT_STARTS_BEFORE_BOOTBLOCK
 	select X86_AMD_FIXED_MTRRS
-	select X86_AMD_INIT_SIPI
+	select X86_INIT_NEED_1_SIPI
 
 config ARCH_ALL_STAGES_X86
 	default n
@@ -130,9 +131,15 @@ config PSP_SHAREDMEM_SIZE
 	  started.  The workbuf's base depends on the address of the reset
 	  vector.
 
-config PRERAM_CBMEM_CONSOLE_SIZE
+config PRE_X86_CBMEM_CONSOLE_SIZE
 	hex
 	default 0x1600
+	help
+	  Size of the CBMEM console used in PSP verstage.
+
+config PRERAM_CBMEM_CONSOLE_SIZE
+	hex
+	default 0x2000
 	help
 	  Increase this value if preram cbmem console is getting truncated
 
@@ -195,6 +202,21 @@ config VERSTAGE_SIZE
 	  Sets the size of DRAM allocation for verstage in linker script if
 	  running as a separate stage on x86.
 
+config ASYNC_FILE_LOADING
+	bool "Loads files from SPI asynchronously"
+	select COOP_MULTITASKING
+	select SOC_AMD_COMMON_BLOCK_LPC_SPI_DMA
+	select CBFS_PRELOAD
+	help
+	  When enabled, the platform will use the LPC SPI DMA controller to
+	  asynchronously load contents from the SPI ROM. This will improve
+	  boot time because the CPUs can be performing useful work while the
+	  SPI contents are being preloaded.
+
+config CBFS_CACHE_SIZE
+	hex
+	default 0x40000 if CBFS_PRELOAD
+
 config RAMBASE
 	hex
 	default 0x10000000
@@ -204,14 +226,10 @@ config RO_REGION_ONLY
 	depends on VBOOT_SLOTS_RW_AB || VBOOT_SLOTS_RW_A
 	default "apu/amdfw"
 
-config CPU_ADDR_BITS
-	int
-	default 48
-
-config MMCONF_BASE_ADDRESS
+config ECAM_MMCONF_BASE_ADDRESS
 	default 0xF8000000
 
-config MMCONF_BUS_NUMBER
+config ECAM_MMCONF_BUS_NUMBER
 	default 64
 
 config MAX_CPUS
@@ -327,13 +345,11 @@ config PSP_DISABLE_POSTCODES
 	help
 	  Disables the output of port80 post codes from PSP.
 
-config PSP_POSTCODES_ON_ESPI
-	bool "Use eSPI bus for PSP post codes"
-	default y
-	depends on !PSP_DISABLE_POSTCODES
+config PSP_INIT_ESPI
+	bool "Initialize eSPI in PSP Stage 2 Boot Loader"
 	help
-	  Select to send PSP port80 post codes on eSPI bus.
-	  If not selected, PSP port80 codes will be sent on LPC bus.
+	  Select to initialize the eSPI controller in the PSP Stage 2 Boot
+	  Loader.
 
 config PSP_LOAD_MP2_FW
 	bool
@@ -363,6 +379,20 @@ config PSP_WHITELIST_FILE
 	string "Debug whitelist file path"
 	depends on HAVE_PSP_WHITELIST_FILE
 	default "3rdparty/amd_blobs/cezanne/PSP/wtl-czn.sbin"
+
+config HAVE_SPL_FILE
+	bool "Have a mainboard specific SPL table file"
+	default n
+	help
+	  Have a mainboard specific SPL table file, which is created by AMD
+	  and put to 3rdparty/blobs.
+
+	  If unsure, answer 'n'
+
+config SPL_TABLE_FILE
+	string "SPL table file"
+	depends on HAVE_SPL_FILE
+	default "3rdparty/amd_blobs/cezanne/PSP/TypeId0x55_SplTableBl_CZN.sbin"
 
 config PSP_SOFTFUSE_BITS
 	string "PSP Soft Fuse bits to enable"

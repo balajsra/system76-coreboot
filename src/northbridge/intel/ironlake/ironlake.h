@@ -3,8 +3,6 @@
 #ifndef __NORTHBRIDGE_INTEL_IRONLAKE_IRONLAKE_H__
 #define __NORTHBRIDGE_INTEL_IRONLAKE_IRONLAKE_H__
 
-#define DEFAULT_HECIBAR		((u8 *)0xfed17000)
-
 /*
  * D1:F0 PEG
  */
@@ -21,7 +19,7 @@
 
 #include "memmap.h"
 
-#define QUICKPATH_BUS (CONFIG_MMCONF_BUS_NUMBER - 1)
+#define QUICKPATH_BUS (CONFIG_ECAM_MMCONF_BUS_NUMBER - 1)
 
 #include <southbridge/intel/ibexpeak/pch.h>
 

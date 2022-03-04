@@ -22,17 +22,19 @@ config MEDIATEK_DRAM_DVFS_LIMIT_FREQ_CNT
 	  This options limit DRAM frequency calibration count from total 7 to 3,
 	  other frequency will directly use the low frequency shu result.
 
+config MEDIATEK_BLOB_FAST_INIT
+	bool "Enable running fast calibration by blob"
+	default n
+	help
+	  This option allows performing fast calibration through different
+	  open-source policy.
+
 config MEMORY_TEST
 	bool
 	default y
 	help
 	  This option enables memory basic compare test to verify the DRAM read
 	  or write is as expected.
-
-config CLEAR_WDT_MODE_REG
-	bool
-	help
-	  Enable this option to clear WTD mode register explicitly.
 
 config DPM_FOUR_CHANNEL
 	bool
@@ -41,9 +43,10 @@ config DPM_FOUR_CHANNEL
 	  This option enables four channel configuration for DPM.
 
 config MTK_DFD
-	bool
-	default n
+	bool "Enable MediaTek DFD (Design For Debug) settings"
 	help
-	  This option enables DFD (Design for Debug) settings.
+	  DFD (Design for Debug) is a debugging tool, which scans flip-flops
+	  and dumps to internal RAM on the WDT reset. We reserve 1MB on DRAM
+	  to store logs of DFD.
 
 endif

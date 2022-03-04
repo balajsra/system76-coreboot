@@ -6,7 +6,6 @@
 #include <soc/spm.h>
 #include <soc/spm_common.h>
 #include <string.h>
-#include <timer.h>
 
 #define SPMFW_HEADER_SIZE 16
 
@@ -51,5 +50,7 @@ void spm_parse_firmware(struct mtk_mcu *mcu)
 	/* Version */
 	offset += copy_size;
 	assert(offset < file_size);
-	printk(BIOS_INFO, "SPM: spmfw (version %s)\n", (u8 *)mcu->load_buffer + offset);
+	printk(BIOS_INFO, "SPM: spmfw (version %.*s)\n",
+	       (int)(file_size - offset),
+	       (u8 *)mcu->load_buffer + offset);
 }

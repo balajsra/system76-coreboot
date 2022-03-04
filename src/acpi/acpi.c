@@ -18,6 +18,8 @@
 #include <acpi/acpi.h>
 #include <acpi/acpi_ivrs.h>
 #include <acpi/acpigen.h>
+#include <arch/hpet.h>
+#include <arch/mmio.h>
 #include <device/pci.h>
 #include <cbmem.h>
 #include <commonlib/helpers.h>
@@ -266,7 +268,8 @@ void acpi_create_madt(acpi_madt_t *madt)
 static unsigned long acpi_fill_mcfg(unsigned long current)
 {
 	current += acpi_create_mcfg_mmconfig((acpi_mcfg_mmconfig_t *)current,
-			CONFIG_MMCONF_BASE_ADDRESS, 0, 0, CONFIG_MMCONF_BUS_NUMBER - 1);
+			CONFIG_ECAM_MMCONF_BASE_ADDRESS, 0, 0,
+			CONFIG_ECAM_MMCONF_BUS_NUMBER - 1);
 	return current;
 }
 
@@ -291,7 +294,7 @@ void acpi_create_mcfg(acpi_mcfg_t *mcfg)
 	header->length = sizeof(acpi_mcfg_t);
 	header->revision = get_acpi_table_revision(MCFG);
 
-	if (CONFIG(MMCONF_SUPPORT))
+	if (CONFIG(ECAM_MMCONF_SUPPORT))
 		current = acpi_fill_mcfg(current);
 
 	/* (Re)calculate length and checksum. */
@@ -846,10 +849,10 @@ void acpi_create_hpet(acpi_hpet_t *hpet)
 	addr->space_id = ACPI_ADDRESS_SPACE_MEMORY;
 	addr->bit_width = 64;
 	addr->bit_offset = 0;
-	addr->addrl = CONFIG_HPET_ADDRESS & 0xffffffff;
-	addr->addrh = ((unsigned long long)CONFIG_HPET_ADDRESS) >> 32;
+	addr->addrl = HPET_BASE_ADDRESS & 0xffffffff;
+	addr->addrh = ((unsigned long long)HPET_BASE_ADDRESS) >> 32;
 
-	hpet->id = *(unsigned int *)CONFIG_HPET_ADDRESS;
+	hpet->id = read32p(HPET_BASE_ADDRESS);
 	hpet->number = 0;
 	hpet->min_tick = CONFIG_HPET_MIN_TICKS;
 
@@ -1248,7 +1251,7 @@ unsigned long acpi_write_dbg2_pci_uart(acpi_rsdp_t *rsdp, unsigned long current,
 		printk(BIOS_INFO, "%s: Device not enabled\n", __func__);
 		return current;
 	}
-	res = find_resource(dev, PCI_BASE_ADDRESS_0);
+	res = probe_resource(dev, PCI_BASE_ADDRESS_0);
 	if (!res) {
 		printk(BIOS_ERR, "%s: Unable to find resource for %s\n",
 		       __func__, dev_path(dev));
@@ -1506,6 +1509,7 @@ void acpi_create_fadt(acpi_fadt_t *fadt, acpi_facs_t *facs, void *dsdt)
 	memcpy(header->asl_compiler_id, ASLC, 4);
 	header->asl_compiler_revision = asl_revision;
 
+	fadt->FADT_MinorVersion = get_acpi_fadt_minor_version();
 	fadt->firmware_ctrl = (unsigned long) facs;
 	fadt->x_firmware_ctl_l = (unsigned long)facs;
 	fadt->x_firmware_ctl_h = 0;
@@ -1574,6 +1578,17 @@ unsigned long acpi_create_lpi_desc_ncst(acpi_lpi_desc_ncst_t *lpi_desc, uint16_t
 unsigned long __weak fw_cfg_acpi_tables(unsigned long start)
 {
 	return 0;
+}
+
+void preload_acpi_dsdt(void)
+{
+	const char *file = CONFIG_CBFS_PREFIX "/dsdt.aml";
+
+	if (!CONFIG(CBFS_PRELOAD))
+		return;
+
+	printk(BIOS_DEBUG, "Preloading %s\n", file);
+	cbfs_preload(file);
 }
 
 unsigned long write_acpi_tables(unsigned long start)
@@ -1932,11 +1947,16 @@ __weak int acpi_get_gpe(int gpe)
 	return -1; /* implemented by SOC */
 }
 
+u8 get_acpi_fadt_minor_version(void)
+{
+	return ACPI_FADT_MINOR_VERSION_0;
+}
+
 int get_acpi_table_revision(enum acpi_tables table)
 {
 	switch (table) {
 	case FADT:
-		return ACPI_FADT_REV_ACPI_6_0;
+		return ACPI_FADT_REV_ACPI_6;
 	case MADT: /* ACPI 3.0: 2, ACPI 4.0/5.0: 3, ACPI 6.2b/6.3: 5 */
 		return 3;
 	case MCFG:

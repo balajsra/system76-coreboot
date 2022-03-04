@@ -185,6 +185,7 @@ static void asmlinkage ap_init(void)
 
 	/* Ensure the local APIC is enabled */
 	enable_lapic();
+	setup_lapic_interrupts();
 
 	info->cpu = cpus_dev[info->index];
 
@@ -423,8 +424,7 @@ static enum cb_err send_sipi_to_aps(int ap_count, atomic_t *num_aps, int sipi_ve
 		printk(BIOS_DEBUG, "done.\n");
 	}
 
-	lapic_send_ipi(LAPIC_DEST_ALLBUT | LAPIC_INT_ASSERT | LAPIC_DM_STARTUP | sipi_vector,
-		       0);
+	lapic_send_ipi_others(LAPIC_INT_ASSERT | LAPIC_DM_STARTUP | sipi_vector);
 	printk(BIOS_DEBUG, "Waiting for SIPI to complete...\n");
 	if (apic_wait_timeout(10000 /* 10 ms */, 50 /* us */) != CB_SUCCESS) {
 		printk(BIOS_ERR, "timed out.\n");
@@ -454,9 +454,6 @@ static enum cb_err start_aps(struct bus *cpu_bus, int ap_count, atomic_t *num_ap
 
 	printk(BIOS_DEBUG, "Attempting to start %d APs\n", ap_count);
 
-	int x2apic_mode = is_x2apic_mode();
-	printk(BIOS_DEBUG, "Starting CPUs in %s mode\n", x2apic_mode ? "x2apic" : "xapic");
-
 	if (lapic_busy()) {
 		printk(BIOS_DEBUG, "Waiting for ICR not to be busy...\n");
 		if (apic_wait_timeout(1000 /* 1 ms */, 50) != CB_SUCCESS) {
@@ -467,9 +464,9 @@ static enum cb_err start_aps(struct bus *cpu_bus, int ap_count, atomic_t *num_ap
 	}
 
 	/* Send INIT IPI to all but self. */
-	lapic_send_ipi(LAPIC_DEST_ALLBUT | LAPIC_INT_ASSERT | LAPIC_DM_INIT, 0);
+	lapic_send_ipi_others(LAPIC_INT_ASSERT | LAPIC_DM_INIT);
 
-	if (!CONFIG(X86_AMD_INIT_SIPI)) {
+	if (!CONFIG(X86_INIT_NEED_1_SIPI)) {
 		printk(BIOS_DEBUG, "Waiting for 10ms after sending INIT.\n");
 		mdelay(10);
 
@@ -547,6 +544,7 @@ static void init_bsp(struct bus *cpu_bus)
 
 	/* Ensure the local APIC is enabled */
 	enable_lapic();
+	setup_lapic_interrupts();
 
 	/* Set the device path of the boot CPU. */
 	cpu_path.type = DEVICE_PATH_APIC;
@@ -592,6 +590,10 @@ static enum cb_err mp_init(struct bus *cpu_bus, struct mp_params *p)
 		printk(BIOS_CRIT, "Invalid MP parameters\n");
 		return CB_ERR;
 	}
+
+	/* We just need to run things on the BSP */
+	if (!CONFIG(SMP))
+		return bsp_do_flight_plan(p);
 
 	/* Default to currently running CPU. */
 	num_cpus = allocate_cpu_devices(cpu_bus, p);
@@ -648,7 +650,7 @@ void smm_initiate_relocation_parallel(void)
 		printk(BIOS_DEBUG, "done.\n");
 	}
 
-	lapic_send_ipi(LAPIC_INT_ASSERT | LAPIC_DM_SMI, lapicid());
+	lapic_send_ipi_self(LAPIC_INT_ASSERT | LAPIC_DM_SMI);
 
 	if (lapic_busy()) {
 		if (apic_wait_timeout(1000 /* 1 ms */, 100 /* us */) != CB_SUCCESS) {
@@ -758,22 +760,17 @@ static void adjust_smm_apic_id_map(struct smm_loader_params *smm_params)
 }
 
 static enum cb_err install_relocation_handler(int num_cpus, size_t real_save_state_size,
-				      size_t save_state_size, uintptr_t perm_smbase)
+				      size_t save_state_size)
 {
 	struct smm_loader_params smm_params = {
-		.per_cpu_stack_size = CONFIG_SMM_STUB_STACK_SIZE,
-		.num_concurrent_stacks = num_cpus,
+		.num_cpus = num_cpus,
 		.real_cpu_save_state_size = real_save_state_size,
 		.per_cpu_save_state_size = save_state_size,
 		.num_concurrent_save_states = 1,
 		.handler = smm_do_relocation,
 	};
 
-	/* Allow callback to override parameters. */
-	if (mp_state.ops.adjust_smm_params != NULL)
-		mp_state.ops.adjust_smm_params(&smm_params, 0);
-
-	if (smm_setup_relocation_handler((void *)perm_smbase, &smm_params)) {
+	if (smm_setup_relocation_handler(&smm_params)) {
 		printk(BIOS_ERR, "%s: smm setup failed\n", __func__);
 		return CB_ERR;
 	}
@@ -796,20 +793,15 @@ static enum cb_err install_permanent_handler(int num_cpus, uintptr_t smbase,
 	 * size and save state size for each CPU.
 	 */
 	struct smm_loader_params smm_params = {
-		.per_cpu_stack_size = CONFIG_SMM_MODULE_STACK_SIZE,
-		.num_concurrent_stacks = num_cpus,
+		.num_cpus = num_cpus,
 		.real_cpu_save_state_size = real_save_state_size,
 		.per_cpu_save_state_size = save_state_size,
 		.num_concurrent_save_states = num_cpus,
 	};
 
-	/* Allow callback to override parameters. */
-	if (mp_state.ops.adjust_smm_params != NULL)
-		mp_state.ops.adjust_smm_params(&smm_params, 1);
-
 	printk(BIOS_DEBUG, "Installing permanent SMM handler to 0x%08lx\n", smbase);
 
-	if (smm_load_module((void *)smbase, smsize, &smm_params))
+	if (smm_load_module(smbase, smsize, &smm_params))
 		return CB_ERR;
 
 	adjust_smm_apic_id_map(&smm_params);
@@ -827,10 +819,15 @@ static void load_smm_handlers(void)
 	if (!is_smm_enabled())
 		return;
 
+	if (smm_setup_stack(mp_state.perm_smbase, mp_state.perm_smsize, mp_state.cpu_count,
+			    CONFIG_SMM_MODULE_STACK_SIZE)) {
+		printk(BIOS_ERR, "Unable to install SMM relocation handler.\n");
+		smm_disable();
+	}
+
 	/* Install handlers. */
 	if (install_relocation_handler(mp_state.cpu_count, real_save_state_size,
-				       smm_save_state_size, mp_state.perm_smbase) !=
-										CB_SUCCESS) {
+				       smm_save_state_size) != CB_SUCCESS) {
 		printk(BIOS_ERR, "Unable to install SMM relocation handler.\n");
 		smm_disable();
 	}
@@ -1061,20 +1058,11 @@ static size_t smm_stub_size(void)
 	return rmodule_memory_size(&smm_stub);
 }
 
-static void fill_mp_state(struct mp_state *state, const struct mp_ops *ops)
+static void fill_mp_state_smm(struct mp_state *state, const struct mp_ops *ops)
 {
-	/*
-	 * Make copy of the ops so that defaults can be set in the non-const
-	 * structure if needed.
-	 */
-	memcpy(&state->ops, ops, sizeof(*ops));
-
-	if (ops->get_cpu_count != NULL)
-		state->cpu_count = ops->get_cpu_count();
-
 	if (ops->get_smm_info != NULL)
 		ops->get_smm_info(&state->perm_smbase, &state->perm_smsize,
-					&state->smm_real_save_state_size);
+				  &state->smm_real_save_state_size);
 
 	state->smm_save_state_size = MAX(state->smm_real_save_state_size, smm_stub_size());
 
@@ -1090,9 +1078,23 @@ static void fill_mp_state(struct mp_state *state, const struct mp_ops *ops)
 	 * Default to smm_initiate_relocation() if trigger callback isn't
 	 * provided.
 	 */
-	if (CONFIG(HAVE_SMI_HANDLER) &&
-		ops->per_cpu_smm_trigger == NULL)
+	if (ops->per_cpu_smm_trigger == NULL)
 		mp_state.ops.per_cpu_smm_trigger = smm_initiate_relocation;
+}
+
+static void fill_mp_state(struct mp_state *state, const struct mp_ops *ops)
+{
+	/*
+	 * Make copy of the ops so that defaults can be set in the non-const
+	 * structure if needed.
+	 */
+	memcpy(&state->ops, ops, sizeof(*ops));
+
+	if (ops->get_cpu_count != NULL)
+		state->cpu_count = ops->get_cpu_count();
+
+	if (CONFIG(HAVE_SMI_HANDLER))
+		fill_mp_state_smm(state, ops);
 }
 
 static enum cb_err do_mp_init_with_smm(struct bus *cpu_bus, const struct mp_ops *mp_ops)

@@ -21,24 +21,54 @@ fw_config
 	end
 end
 chip soc/intel/alderlake
-	# This disabled autonomous GPIO power management, otherwise
-	# old cr50 FW only supports short pulses; need to clarify
-	# the minimum PCH IRQ pulse width with Intel, b/180111628
-	register "gpio_override_pm" = "1"
-	register "gpio_pm[COMM_0]" = "0"
-	register "gpio_pm[COMM_1]" = "0"
-	register "gpio_pm[COMM_2]" = "0"
-	register "gpio_pm[COMM_3]" = "0"
-	register "gpio_pm[COMM_4]" = "0"
-	register "gpio_pm[COMM_5]" = "0"
 	register "SaGv" = "SaGv_Enabled"
+	register "PsysPmax" = "143"
 	register "TcssAuxOri" = "1"
+	# Acoustic settings
+	register "AcousticNoiseMitigation" = "1"
+	register "SlowSlewRate[VR_DOMAIN_IA]" = "SLEW_FAST_8"
+	register "SlowSlewRate[VR_DOMAIN_GT]" = "SLEW_FAST_8"
+	register "FastPkgCRampDisable[VR_DOMAIN_IA]" = "1"
+	register "FastPkgCRampDisable[VR_DOMAIN_GT]" = "1"
+
 	register "typec_aux_bias_pads[0]" = "{.pad_auxp_dc = GPP_E22, .pad_auxn_dc = GPP_E23}"
+	register "usb2_ports[1]" = "USB2_PORT_MAX_TYPE_C(OC1)" # set MAX to USB2_C1 for eye diagram
 	register "usb2_ports[2]" = "USB2_PORT_EMPTY" # Disable USB2_C2
 	register "usb2_ports[3]" = "USB2_PORT_EMPTY" # M.2 WWAN
 	register "usb2_ports[7]" = "USB2_PORT_MID(OC_SKIP)" # Type-A MLB Port
 	register "usb2_ports[8]" = "USB2_PORT_EMPTY" # Type-A DB Port
 	register "usb3_ports[1]" = "USB3_PORT_DEFAULT(OC_SKIP)" # USB3/2 Type A MLB port
+	register "tcss_ports[1]" = "TCSS_PORT_EMPTY"
+	# Intel Common SoC Config
+	#+-------------------+---------------------------+
+	#| Field             |  Value                    |
+	#+-------------------+---------------------------+
+	#| GSPI1             | Fingerprint MCU           |
+	#| I2C0              | Audio and WFC             |
+	#| I2C1              | cr50 TPM. Early init is	 |
+	#|    		     | required to set up a BAR  |
+	#|		     | for TPM communication     |
+	#| I2C2              | SAR0                      |
+	#| I2C3              | Touchscreen    		 |
+	#|                   |  			 |
+	#|                   |   			 |
+	#| I2C5              | Trackpad                  |
+	#+-------------------+---------------------------+
+	register "common_soc_config" = "{
+		.i2c[1] = {
+			.early_init = 1,
+			.speed = I2C_SPEED_FAST,
+			.rise_time_ns = 600,
+			.fall_time_ns = 400,
+			.data_hold_time_ns = 50,
+		},
+		.i2c[3] = {
+			.speed = I2C_SPEED_FAST,
+			.rise_time_ns = 650,
+			.fall_time_ns = 400,
+			.data_hold_time_ns = 50,
+		},
+	}"
 	device domain 0 on
 		device ref dtt on
 			chip drivers/intel/dptf
@@ -62,7 +92,7 @@ chip soc/intel/alderlake
 				}"
 				register "controls.power_limits" = "{
 					.pl1 = {
-							.min_power = 3000,
+							.min_power = 12000,
 							.max_power = 15000,
 							.time_window_min = 28 * MSECS_PER_SEC,
 							.time_window_max = 32 * MSECS_PER_SEC,
@@ -92,6 +122,7 @@ chip soc/intel/alderlake
 				device generic 0 on end
 			end
 		end
+		device ref pcie_rp6 off end
 		device ref pcie_rp8 on
 			chip soc/intel/common/block/pcie/rtd3
 				register "enable_gpio" = "ACPI_GPIO_OUTPUT_ACTIVE_HIGH(GPP_H13)"
@@ -135,7 +166,7 @@ chip soc/intel/alderlake
 				register "name" = ""MXW0""
 				register "r0_calib_key" = ""dsm_calib_r0_0""
 				register "temperature_calib_key" = ""dsm_calib_temp_0""
-				register "dsm_param_file_name" = ""dsm_param""
+				register "dsm_param_file_name" = ""dsm_param_R""
 				register "vmon_slot_no" = "0"
 				register "imon_slot_no" = "1"
 				device i2c 0x38 on
@@ -147,7 +178,7 @@ chip soc/intel/alderlake
 				register "name" = ""MXW1""
 				register "r0_calib_key" = ""dsm_calib_r0_1""
 				register "temperature_calib_key" = ""dsm_calib_temp_1""
-				register "dsm_param_file_name" = ""dsm_param""
+				register "dsm_param_file_name" = ""dsm_param_L""
 				register "vmon_slot_no" = "1"
 				register "imon_slot_no" = "0"
 				device i2c 0x3c on
@@ -155,6 +186,13 @@ chip soc/intel/alderlake
 			end
 		end #I2C0
 		device ref i2c1 on
+			chip drivers/i2c/tpm
+				register "hid" = ""GOOG0005""
+				register "irq" = "ACPI_IRQ_EDGE_LOW(GPP_A13_IRQ)"
+				device i2c 50 on end
+			end
+		end
+		device ref i2c3 on
 			chip drivers/i2c/hid
 				register "generic.hid" = ""ELAN9050""
 				register "generic.desc" = ""ELAN Touchscreen""
@@ -162,7 +200,7 @@ chip soc/intel/alderlake
 				register "generic.probed" = "1"
 				register "generic.reset_gpio" =
 							"ACPI_GPIO_OUTPUT_ACTIVE_LOW(GPP_C1)"
-				register "generic.reset_delay_ms" = "300"
+				register "generic.reset_delay_ms" = "200"
 				register "generic.reset_off_delay_ms" = "1"
 				register "generic.enable_gpio" =
 							"ACPI_GPIO_OUTPUT_ACTIVE_HIGH(GPP_C0)"
@@ -171,6 +209,7 @@ chip soc/intel/alderlake
 							"ACPI_GPIO_OUTPUT_ACTIVE_LOW(GPP_C6)"
 				register "generic.stop_off_delay_ms" = "1"
 				register "generic.has_power_resource" = "1"
+				register "generic.disable_gpio_export_in_crs" = "1"
 				register "hid_desc_reg_offset" = "0x01"
 				device i2c 0x15 on end
 			end
@@ -207,13 +246,13 @@ chip soc/intel/alderlake
 			chip drivers/intel/pmc_mux
 				device generic 0 on
 					chip drivers/intel/pmc_mux/conn
-						register "usb2_port_number" = "1"
-						register "usb3_port_number" = "1"
+						use usb2_port1 as usb2_port
+						use tcss_usb3_port1 as usb3_port
 						device generic 0 alias conn0 on end
 					end
 					chip drivers/intel/pmc_mux/conn
-						register "usb2_port_number" = "2"
-						register "usb3_port_number" = "3"
+						use usb2_port2 as usb2_port
+						use tcss_usb3_port3 as usb3_port
 						device generic 1 alias conn1 on end
 					end
 				end
@@ -225,13 +264,15 @@ chip soc/intel/alderlake
 					chip drivers/usb/acpi
 						register "desc" = ""USB3 Type-C Port C0 (MLB)""
 						register "type" = "UPC_TYPE_C_USB2_SS_SWITCH"
-						register "group" = "ACPI_PLD_GROUP(1, 1)"
+						register "use_custom_pld" = "true"
+						register "custom_pld" = "ACPI_PLD_TYPE_C(RIGHT, LEFT, ACPI_PLD_GROUP(1, 1))"
 						device ref tcss_usb3_port1 on end
 					end
 					chip drivers/usb/acpi
 						register "desc" = ""USB3 Type-C Port C1 (DB)""
 						register "type" = "UPC_TYPE_C_USB2_SS_SWITCH"
-						register "group" = "ACPI_PLD_GROUP(2, 1)"
+						register "use_custom_pld" = "true"
+						register "custom_pld" = "ACPI_PLD_TYPE_C(LEFT, LEFT, ACPI_PLD_GROUP(2, 1))"
 						device ref tcss_usb3_port3 on end
 					end
 				end
@@ -243,13 +284,15 @@ chip soc/intel/alderlake
 					chip drivers/usb/acpi
 						register "desc" = ""USB2 Type-C Port C0 (MLB)""
 						register "type" = "UPC_TYPE_C_USB2_SS_SWITCH"
-						register "group" = "ACPI_PLD_GROUP(1, 1)"
+						register "use_custom_pld" = "true"
+						register "custom_pld" = "ACPI_PLD_TYPE_C(RIGHT, LEFT, ACPI_PLD_GROUP(1, 1))"
 						device ref usb2_port1 on end
 					end
 					chip drivers/usb/acpi
 						register "desc" = ""USB2 Type-C Port C1 (DB)""
 						register "type" = "UPC_TYPE_C_USB2_SS_SWITCH"
-						register "group" = "ACPI_PLD_GROUP(2, 1)"
+						register "use_custom_pld" = "true"
+						register "custom_pld" = "ACPI_PLD_TYPE_C(LEFT, LEFT, ACPI_PLD_GROUP(2, 1))"
 						device ref usb2_port2 on end
 					end
 					chip drivers/usb/acpi
@@ -261,7 +304,8 @@ chip soc/intel/alderlake
 					chip drivers/usb/acpi
 						register "desc" = ""USB2 Type-A Port (MLB)""
 						register "type" = "UPC_TYPE_A"
-						register "group" = "ACPI_PLD_GROUP(4, 1)"
+						register "use_custom_pld" = "true"
+						register "custom_pld" = "ACPI_PLD_TYPE_A(RIGHT, RIGHT, ACPI_PLD_GROUP(3, 1))"
 						device ref usb2_port8 on end
 					end
 					chip drivers/usb/acpi
@@ -274,7 +318,8 @@ chip soc/intel/alderlake
 					chip drivers/usb/acpi
 						register "desc" = ""USB3 Type-A Port (MLB)""
 						register "type" = "UPC_TYPE_USB3_A"
-						register "group" = "ACPI_PLD_GROUP(4, 1)"
+						register "use_custom_pld" = "true"
+						register "custom_pld" = "ACPI_PLD_TYPE_A(RIGHT, RIGHT, ACPI_PLD_GROUP(3, 1))"
 						device ref usb3_port2 on end
 					end
 				end

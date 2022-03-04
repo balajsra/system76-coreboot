@@ -4,6 +4,7 @@
 #include <amdblocks/biosram.h>
 #include <amdblocks/hda.h>
 #include <device/pci_ops.h>
+#include <arch/hpet.h>
 #include <arch/ioapic.h>
 #include <acpi/acpi.h>
 #include <acpi/acpigen.h>
@@ -332,7 +333,7 @@ static const struct pci_driver family15_northbridge __pci_driver = {
  */
 void amd_initcpuio(void)
 {
-	uintptr_t topmem = bsp_topmem();
+	uintptr_t topmem = amd_topmem();
 	uintptr_t base, limit;
 
 	/* Enable legacy video routing: D18F1xF4 VGA Enable */

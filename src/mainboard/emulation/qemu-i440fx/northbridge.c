@@ -8,10 +8,8 @@
 #include <device/pci_def.h>
 #include <device/pci_ops.h>
 #include <arch/ioapic.h>
-#include <stdint.h>
 #include <device/device.h>
 #include <stdlib.h>
-#include <string.h>
 #include <smbios.h>
 #include <types.h>
 #include "memory.h"
@@ -265,11 +263,11 @@ static void cpu_bus_init(struct device *dev)
 
 static void cpu_bus_scan(struct device *bus)
 {
-	int max_cpus = fw_cfg_max_cpus();
+	unsigned int max_cpus = fw_cfg_max_cpus();
 	struct device *cpu;
 	int i;
 
-	if (max_cpus < 0)
+	if (max_cpus == 0)
 		return;
 	/*
 	 * Do not install more CPUs than supported by coreboot.

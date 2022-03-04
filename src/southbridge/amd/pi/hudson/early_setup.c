@@ -77,7 +77,7 @@ void hudson_lpc_decode(void)
 	pm_write8(0xec, pm_read8(0xec) | 0x01);
 
 	const pci_devfn_t dev = PCI_DEV(0, 0x14, 3);
-	/* Serial port numeration on Hudson:
+	/* Serial port enumeration on Hudson:
 	 * PORT0 - 0x3f8
 	 * PORT1 - 0x2f8
 	 * PORT5 - 0x2e8
@@ -215,7 +215,8 @@ void hudson_set_spi100(u16 norm, u16 fast, u16 alt, u16 tpm)
 				(fast << SPI_FAST_SPEED_NEW_SH) |
 				(alt << SPI_ALT_SPEED_NEW_SH) |
 				(tpm << SPI_TPM_SPEED_NEW_SH));
-	write16((void *)(base + SPI100_ENABLE), SPI_USE_SPI100);
+	write16((void *)(base + SPI100_ENABLE), SPI_USE_SPI100 |
+		read16((void *)(base + SPI100_ENABLE)));
 }
 
 void hudson_disable_4dw_burst(void)

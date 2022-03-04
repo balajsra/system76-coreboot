@@ -3,7 +3,6 @@
 #include "ec.h"
 
 #include <acpi/acpi.h>
-#include <console/console.h>
 #include <cpu/x86/smm.h>
 #include <device/device.h>
 #include <southbridge/amd/common/amd_pci_util.h>
@@ -26,7 +25,6 @@ static const u8 mainboard_intr_data[0x54] = {
 	0x11, 0x13, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x10, 0x11, 0x12, 0x13
 };
-
 
 static void pavilion_cold_boot_init(void)
 {

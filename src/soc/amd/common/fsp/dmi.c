@@ -28,7 +28,7 @@ static uint16_t ddr_speed_mhz_to_reported_mts(uint16_t ddr_type, uint16_t speed)
 	case MEMORY_TYPE_LPDDR4:
 		return lpddr4_speed_mhz_to_reported_mts(speed);
 	default:
-		printk(BIOS_ERR, "ERROR: Unknown memory type %x", ddr_type);
+		printk(BIOS_ERR, "Unknown memory type %x", ddr_type);
 		return 0;
 	}
 }
@@ -52,10 +52,11 @@ static void transfer_memory_info(const TYPE17_DMI_INFO *dmi17,
 
 	dimm->rank_per_dimm = dmi17->Attributes;
 
-	dimm->mod_type = smbios_form_factor_to_spd_mod_type(dmi17->FormFactor);
+	dimm->mod_type = smbios_form_factor_to_spd_mod_type(dmi17->MemoryType,
+						dmi17->FormFactor);
 
-	dimm->bus_width =
-	    smbios_bus_width_to_spd_width(dmi17->TotalWidth, dmi17->DataWidth);
+	dimm->bus_width = smbios_bus_width_to_spd_width(dmi17->MemoryType, dmi17->TotalWidth,
+						dmi17->DataWidth);
 
 	dimm->mod_id = dmi17->ManufacturerIdCode;
 
