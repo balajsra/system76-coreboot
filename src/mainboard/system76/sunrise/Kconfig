@@ -61,6 +61,9 @@ config EFS_SPI_SPEED
 config EFS_SPI_MICRON_FLAG
 	default 2
 
+config FMDFILE
+	default "src/mainboard/\$(CONFIG_MAINBOARD_DIR)/board.fmd"
+
 config NORMAL_READ_SPI_SPEED
 	default 1	# 33MHz
 
