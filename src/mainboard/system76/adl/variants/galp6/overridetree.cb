@@ -165,6 +165,7 @@ chip soc/intel/alderlake
 				.flags = PCIE_RP_LTR | PCIE_RP_AER,
 			}"
 			chip soc/intel/common/block/pcie/rtd3
+				register "enable_gpio" = "ACPI_GPIO_OUTPUT_ACTIVE_HIGH(GPP_C5)" # GPIO_LANRTD3
 				register "reset_gpio" = "ACPI_GPIO_OUTPUT_ACTIVE_LOW(GPP_F7)" # LAN_PLT_RST#
 				register "srcclk_pin" = "6" # LAN_CLKREQ#
 				device generic 0 on end

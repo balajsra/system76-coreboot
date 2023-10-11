@@ -7,7 +7,7 @@ static const struct pad_config gpio_table[] = {
 	/* ------- GPIO Group GPD ------- */
 	PAD_CFG_NF(GPD0, UP_20K, PWROK, NF1), // PM_BATLOW#
 	PAD_CFG_NF(GPD1, NATIVE, PWROK, NF1), // AC_PRESENT
-	PAD_CFG_NF(GPD2, NATIVE, PWROK, NF1), // LAN_WAKEUP#
+	PAD_NC(GPD2, NONE),
 	PAD_CFG_NF(GPD3, UP_20K, PWROK, NF1), // PWR_BTN#
 	PAD_CFG_NF(GPD4, NONE, PWROK, NF1), // SUSB#_PCH
 	PAD_CFG_NF(GPD5, NONE, PWROK, NF1), // SUSC#_PCH
@@ -16,7 +16,7 @@ static const struct pad_config gpio_table[] = {
 	PAD_CFG_NF(GPD8, NONE, PWROK, NF1), // SUS_CLK
 	PAD_CFG_NF(GPD9, NONE, DEEP, NF1), // SLP_WLAN#
 	PAD_CFG_NF(GPD10, NONE, PWROK, NF1), // SLP_S5#
-	PAD_CFG_NF(GPD11, NONE, PWROK, NF1), // LAN_DISABLE#
+	PAD_NC(GPD11, NONE),
 
 	/* ------- GPIO Group GPP_A ------- */
 	PAD_CFG_NF(GPP_A0, UP_20K, DEEP, NF1), // ESPI_IO0_EC
@@ -41,7 +41,7 @@ static const struct pad_config gpio_table[] = {
 	PAD_CFG_GPI(GPP_A19, NONE, DEEP), // DGPU_PWRGD_R
 	PAD_NC(GPP_A20, NONE),
 	PAD_NC(GPP_A21, NONE),
-	PAD_CFG_GPO(GPP_A22, 1, PLTRST), // GPIO_LAN_EN
+	PAD_NC(GPP_A22, NONE),
 	PAD_NC(GPP_A23, NONE),
 
 	/* ------- GPIO Group GPP_B ------- */
@@ -76,7 +76,7 @@ static const struct pad_config gpio_table[] = {
 	PAD_CFG_GPI(GPP_C2, NONE, DEEP), // TLS CONFIDENTIALITY strap
 	PAD_CFG_NF(GPP_C3, NONE, DEEP, NF1), // SML0_CLK
 	PAD_CFG_NF(GPP_C4, NONE, DEEP, NF1), // SML0_DATA
-	PAD_CFG_GPO(GPP_C5, 1, PLTRST), // ESPI OR EC LESS strap
+	PAD_CFG_GPO(GPP_C5, 1, PLTRST), // GPIO_LANRTD3
 	PAD_CFG_NF(GPP_C6, NONE, DEEP, NF1), // TBT-PCH_I2C_SCL
 	PAD_CFG_NF(GPP_C7, NONE, DEEP, NF1), // TBT-PCH_I2C_SDA
 	// GPP_C8 missing
@@ -152,7 +152,7 @@ static const struct pad_config gpio_table[] = {
 	PAD_CFG_NF(GPP_F4, NONE, DEEP, NF1), // CNVI_RST#
 	// GPP_F5 (CNVI_CLKREQ) programmed by FSP
 	PAD_CFG_NF(GPP_F6, NONE, DEEP, NF1), // CNVI_GNSS_PA_BLANKING
-	PAD_CFG_GPO(GPP_F7, 1, DEEP), // LAN_PLT_RST#
+	PAD_CFG_GPO(GPP_F7, 1, PLTRST), // LAN_PLT_RST#
 	// GPP_F8 missing
 	PAD_NC(GPP_F9, NONE),
 	PAD_CFG_GPO(GPP_F10, 1, DEEP), // GPIO_CARD_PLT_RST#
