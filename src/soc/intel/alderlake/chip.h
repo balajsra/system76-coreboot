@@ -771,6 +771,14 @@ struct soc_intel_alderlake_config {
 	 * Set this to 0 in order to disable hwp scalability tracking.
 	 */
 	bool enable_hwp_scalability_tracking;
+
+	/*
+	 * Used with `s0ix_enable` to indicate S3 is the preferred suspend
+	 * method via the FADT feature flag.
+	 * Default is set to false, using S0ix for suspend.
+	 * Set this to true to indicate to the OS that S3 should be used.
+	 */
+	bool prefer_s3_suspend;
 };
 
 typedef struct soc_intel_alderlake_config config_t;

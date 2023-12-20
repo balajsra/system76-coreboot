@@ -157,7 +157,7 @@ void soc_fill_fadt(acpi_fadt_t *fadt)
 
 	fill_fadt_extended_pm_io(fadt);
 
-	if (config->s0ix_enable)
+	if (config->s0ix_enable && !config->prefer_s3_suspend)
 		fadt->flags |= ACPI_FADT_LOW_PWR_IDLE_S0;
 }
 

@@ -452,6 +452,14 @@ struct soc_intel_cannonlake_config {
 	bool cpu_turbo_disable;
 
 	bool disable_vmx;
+
+	/*
+	 * Used with `s0ix_enable` to indicate S3 is the preferred suspend
+	 * method via the FADT feature flag.
+	 * Default is set to false, using S0ix for suspend.
+	 * Set this to true to indicate to the OS that S3 should be used.
+	 */
+	bool prefer_s3_suspend;
 };
 
 typedef struct soc_intel_cannonlake_config config_t;
