@@ -12,6 +12,10 @@ chip soc/intel/tigerlake
 	# Enable Enhanced Intel SpeedStep
 	register "eist_enable" = "1"
 
+	# Enable S0ix but prefer S3 suspend
+	register "s0ix_enable" = "true"
+	register "prefer_s3_suspend" = "true"
+
 # CPU (soc/intel/tigerlake/cpu.c)
 	# Power limits
 	register "power_limits_config[POWER_LIMITS_H_8_CORE]" = "{

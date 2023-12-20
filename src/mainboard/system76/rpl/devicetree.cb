@@ -11,6 +11,10 @@ chip soc/intel/alderlake
 	# Enable Enhanced Intel SpeedStep
 	register "eist_enable" = "1"
 
+	# Enable S0ix but prefer S3 suspend
+	register "s0ix_enable" = "true"
+	register "prefer_s3_suspend" = "true"
+
 	# Enable C6 DRAM
 	register "enable_c6dram" = "1"
 

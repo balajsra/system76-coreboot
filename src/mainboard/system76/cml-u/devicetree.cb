@@ -18,6 +18,10 @@ chip soc/intel/cannonlake
 	# Enable Enhanced Intel SpeedStep
 	register "eist_enable" = "1"
 
+	# Enable S0ix but prefer S3 suspend
+	register "s0ix_enable" = "true"
+	register "prefer_s3_suspend" = "true"
+
 # FSP Memory (soc/intel/cannonlake/romstage/fsp_params.c)
 	register "SaGv" = "SaGv_Enabled"
 	register "enable_c6dram" = "1"
